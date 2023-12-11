@@ -1,594 +1,587 @@
 [
   {
-    "fileName": "rod_lactiplantibacillus_plantarum_32_default_mmrsagar_3_07102022161105.png",
+    "fileName": "rod_lactiplantibacillus_plantarum_32_default_mmrsagar_3_07102022161105.jpg",
     "usedAgar": 0.0,
     "countedColonies": 3763.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "rod_lactiplantibacillus_plantarum_38_default_mmrsagar_3_07102022120038.png",
+    "fileName": "rod_lactiplantibacillus_plantarum_38_default_mmrsagar_3_07102022120038.jpg",
     "usedAgar": 0.0,
     "countedColonies": 38.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "rod_lactobacillus_rennongilfy_35_default_mmrsagar_3_07102022120149.png",
+    "fileName": "rod_lactobacillus_rennongilfy_35_default_mmrsagar_3_07102022120149.jpg",
     "usedAgar": 0.0,
     "countedColonies": 399.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "cocci_enterococcus_durans_4_default_mmrsagar_3_07102022161940.png",
+    "fileName": "cocci_enterococcus_durans_4_default_mmrsagar_3_07102022161940.jpg",
     "usedAgar": 0.0,
     "countedColonies": 35.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "cocci_enterococcus_durans_5_default_mmrsagar_3_07102022161839.png",
+    "fileName": "cocci_enterococcus_durans_5_default_mmrsagar_3_07102022161839.jpg",
     "usedAgar": 0.0,
     "countedColonies": 55.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "cocci_enterococcus_faecalis_6_default_mmrsagar_3_07102022162045.png",
+    "fileName": "cocci_enterococcus_faecalis_6_default_mmrsagar_3_07102022162045.jpg",
     "usedAgar": 0.0,
     "countedColonies": 61.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "cocci_aerococcus_viridans_12_default_mmrsagar_3_07102022115116.png",
+    "fileName": "cocci_aerococcus_viridans_12_default_mmrsagar_3_07102022115116.jpg",
     "usedAgar": 0.0,
     "countedColonies": 1.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "cocci_enterococcus_faecalis_13_default_mmrsagar_3_07102022114808.png",
+    "fileName": "cocci_enterococcus_faecalis_13_default_mmrsagar_3_07102022114808.jpg",
     "usedAgar": 0.0,
     "countedColonies": 59.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "cocci_enterococcus_faecalis_14_default_mmrsagar_3_07102022115202.png",
+    "fileName": "cocci_enterococcus_faecalis_14_default_mmrsagar_3_07102022115202.jpg",
     "usedAgar": 0.0,
     "countedColonies": 11.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "cocci_enterococcus_faecalis_30_default_mmrsagar_3_07102022161157.png",
+    "fileName": "cocci_enterococcus_faecalis_30_default_mmrsagar_3_07102022161157.jpg",
     "usedAgar": 0.0,
     "countedColonies": 31.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "cocci_enterococcus_faecium_3_default_mmrsagar_3_07102022162030.png",
+    "fileName": "cocci_enterococcus_faecium_3_default_mmrsagar_3_07102022162030.jpg",
     "usedAgar": 0.0,
     "countedColonies": 13.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "cocci_enterococcus_faecium_17_default_mmrsagar_3_07102022160418.png",
+    "fileName": "cocci_enterococcus_faecium_17_default_mmrsagar_3_07102022160418.jpg",
     "usedAgar": 0.0,
     "countedColonies": 113.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "cocci_enterococcus_faecium_17_default_mmrsagar_4_18112022125604.png",
+    "fileName": "cocci_enterococcus_faecium_17_default_mmrsagar_4_18112022125604.jpg",
     "usedAgar": 0.0,
     "countedColonies": 112.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "cocci_enterococcus_italicus_31_default_mmrsagar_3_07102022160905.png",
+    "fileName": "cocci_enterococcus_italicus_31_default_mmrsagar_3_07102022160905.jpg",
     "usedAgar": 0.0,
     "countedColonies": 1.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "cocci_enterococcus_italicus_31_default_mmrsagar_4_18112022130159.png",
+    "fileName": "cocci_enterococcus_italicus_31_default_mmrsagar_4_18112022130159.jpg",
     "usedAgar": 0.0,
     "countedColonies": 1367.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "cocci_enterococcus_pseudoavium_1_default_mmrsagar_3_07102022115721.png",
+    "fileName": "cocci_enterococcus_pseudoavium_1_default_mmrsagar_3_07102022115721.jpg",
     "usedAgar": 0.0,
     "countedColonies": 16.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "cocci_enterococcus_saccharolyticus_15_default_mmrsagar_3_07102022160530.png",
+    "fileName": "cocci_enterococcus_saccharolyticus_15_default_mmrsagar_3_07102022160530.jpg",
     "usedAgar": 0.0,
     "countedColonies": 85.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "cocci_lactococcus_lactis_7_default_mmrsagar_3_07102022161916.png",
+    "fileName": "cocci_lactococcus_lactis_7_default_mmrsagar_3_07102022161916.jpg",
     "usedAgar": 0.0,
     "countedColonies": 23.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "cocci_lactococcus_lactis_7_default_mmrsbpb_3_07102022161858.png",
+    "fileName": "cocci_lactococcus_lactis_7_default_mmrsbpb_3_07102022161858.jpg",
     "usedAgar": 1.0,
     "countedColonies": 29.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "cocci_lactococcus_lactis_18_default_mmrsagar_3_07102022160710.png",
+    "fileName": "cocci_lactococcus_lactis_18_default_mmrsagar_3_07102022160710.jpg",
     "usedAgar": 0.0,
     "countedColonies": 8.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "cocci_lactococcus_lactis_18_default_mmrsbpb_3_07102022160731.png",
+    "fileName": "cocci_lactococcus_lactis_18_default_mmrsbpb_3_07102022160731.jpg",
     "usedAgar": 1.0,
     "countedColonies": 7.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "cocci_lactococcus_lactis_39_default_mmrsagar_3_07102022120012.png",
+    "fileName": "cocci_lactococcus_lactis_39_default_mmrsagar_3_07102022120012.jpg",
     "usedAgar": 0.0,
     "countedColonies": 30.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "cocci_lactococcus_lactis_39_default_mmrsbpb_3_07102022115947.png",
+    "fileName": "cocci_lactococcus_lactis_39_default_mmrsbpb_3_07102022115947.jpg",
     "usedAgar": 1.0,
     "countedColonies": 39.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "cocci_lactococcus_raffinolactis_16_default_mmrsagar_3_07102022160652.png",
+    "fileName": "cocci_lactococcus_raffinolactis_16_default_mmrsagar_3_07102022160652.jpg",
     "usedAgar": 0.0,
     "countedColonies": 29.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "cocci_lactococcus_raffinolactis_16_default_mmrsagar_4_18112022125745.png",
+    "fileName": "cocci_lactococcus_raffinolactis_16_default_mmrsagar_4_18112022125745.jpg",
     "usedAgar": 0.0,
     "countedColonies": 65.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "cocci_lactococcus_raffinolactis_16_default_mmrsbpb_3_07102022160613.png",
+    "fileName": "cocci_lactococcus_raffinolactis_16_default_mmrsbpb_3_07102022160613.jpg",
     "usedAgar": 1.0,
     "countedColonies": 27.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "cocci_lactococcus_raffinolactis_16_default_mmrsbpb_3_07102022160633.png",
+    "fileName": "cocci_lactococcus_raffinolactis_16_default_mmrsbpb_3_07102022160633.jpg",
     "usedAgar": 1.0,
     "countedColonies": 17.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "cocci_lactococcus_raffinolactis_16_default_mmrsbpb_4_18112022125804.png",
+    "fileName": "cocci_lactococcus_raffinolactis_16_default_mmrsbpb_4_18112022125804.jpg",
     "usedAgar": 1.0,
     "countedColonies": 68.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "cocci_lactococcus_raffinolactis_22_default_mmrsagar_3_07102022120506.png",
+    "fileName": "cocci_lactococcus_raffinolactis_22_default_mmrsagar_3_07102022120506.jpg",
     "usedAgar": 0.0,
     "countedColonies": 82.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "cocci_lactococcus_raffinolactis_22_default_mmrsagar_3_07102022120708.png",
+    "fileName": "cocci_lactococcus_raffinolactis_22_default_mmrsagar_3_07102022120708.jpg",
     "usedAgar": 0.0,
     "countedColonies": 43.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "cocci_lactococcus_raffinolactis_22_default_mmrsbpb_3_07102022120605.png",
+    "fileName": "cocci_lactococcus_raffinolactis_22_default_mmrsbpb_3_07102022120605.jpg",
     "usedAgar": 1.0,
     "countedColonies": 42.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "cocci_lactococcus_raffinolactis_22_default_mmrsbpb_3_07102022120633.png",
+    "fileName": "cocci_lactococcus_raffinolactis_22_default_mmrsbpb_3_07102022120633.jpg",
     "usedAgar": 1.0,
     "countedColonies": 49.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "cocci_enterococcus_italicus_31_default_mmrsbpb_3_07102022160923.png",
+    "fileName": "cocci_enterococcus_italicus_31_default_mmrsbpb_3_07102022160923.jpg",
     "usedAgar": 1.0,
     "countedColonies": 1.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "cocci_enterococcus_italicus_31_default_mmrsbpb_4_18112022130144.png",
+    "fileName": "cocci_enterococcus_italicus_31_default_mmrsbpb_4_18112022130144.jpg",
     "usedAgar": 1.0,
     "countedColonies": 1250.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "cocci_enterococcus_faecium_17_default_mmrsbpb_4_18112022125547.png",
+    "fileName": "cocci_enterococcus_faecium_17_default_mmrsbpb_4_18112022125547.jpg",
     "usedAgar": 1.0,
     "countedColonies": 105.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "cocci_enterococcus_faecium_17_default_mmrsbpb_3_07102022160357.png",
+    "fileName": "cocci_enterococcus_faecium_17_default_mmrsbpb_3_07102022160357.jpg",
     "usedAgar": 1.0,
     "countedColonies": 96.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "cocci_enterococcus_faecium_3_default_mmrsbpb_3_07102022162014.png",
+    "fileName": "cocci_enterococcus_faecium_3_default_mmrsbpb_3_07102022162014.jpg",
     "usedAgar": 1.0,
     "countedColonies": 16.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "cocci_enterococcus_faecalis_30_default_mmrsbpb_3_07102022161141.png",
+    "fileName": "cocci_enterococcus_faecalis_30_default_mmrsbpb_3_07102022161141.jpg",
     "usedAgar": 1.0,
     "countedColonies": 38.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "cocci_enterococcus_faecalis_14_default_mmrsbpb_3_07102022115140.png",
+    "fileName": "cocci_enterococcus_faecalis_14_default_mmrsbpb_3_07102022115140.jpg",
     "usedAgar": 1.0,
     "countedColonies": 9.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "cocci_enterococcus_faecalis_13_default_mmrsbpb_3_07102022114834.png",
+    "fileName": "cocci_enterococcus_faecalis_13_default_mmrsbpb_3_07102022114834.jpg",
     "usedAgar": 1.0,
     "countedColonies": 79.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "cocci_enterococcus_faecalis_6_default_mmrsbpb_3_07102022162107.png",
+    "fileName": "cocci_enterococcus_faecalis_6_default_mmrsbpb_3_07102022162107.jpg",
     "usedAgar": 1.0,
     "countedColonies": 57.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "cocci_enterococcus_durans_4_default_mmrsbpb_3_07102022161953.png",
+    "fileName": "cocci_enterococcus_durans_4_default_mmrsbpb_3_07102022161953.jpg",
     "usedAgar": 1.0,
     "countedColonies": 51.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "cocci_pediococcus_pentosaceus_29_default_mmrsbpb_3_07102022161725.png",
+    "fileName": "cocci_pediococcus_pentosaceus_29_default_mmrsbpb_3_07102022161725.jpg",
     "usedAgar": 1.0,
     "countedColonies": 29.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "cocci_pediococcus_pentosaceus_29_default_mmrsagar_3_07102022161648.png",
+    "fileName": "cocci_pediococcus_pentosaceus_29_default_mmrsagar_3_07102022161648.jpg",
     "usedAgar": 0.0,
     "countedColonies": 22.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "cocci_leuconostoc_pseudomesenteroides_9_default_mmrsbpb_3_07102022115012.png",
+    "fileName": "cocci_leuconostoc_pseudomesenteroides_9_default_mmrsbpb_3_07102022115012.jpg",
     "usedAgar": 1.0,
     "countedColonies": 23.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "cocci_leuconostoc_pseudomesenteroides_9_default_mmrsagar_3_07102022115036.png",
+    "fileName": "cocci_leuconostoc_pseudomesenteroides_9_default_mmrsagar_3_07102022115036.jpg",
     "usedAgar": 0.0,
     "countedColonies": 33.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "cocci_leuconostoc_mesenteroides_23_default_mmrsbpb_3_07102022120841.png",
+    "fileName": "cocci_leuconostoc_mesenteroides_23_default_mmrsbpb_3_07102022120841.jpg",
     "usedAgar": 1.0,
     "countedColonies": 111.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "cocci_leuconostoc_mesenteroides_23_default_mmrsagar_3_07102022120822.png",
+    "fileName": "cocci_leuconostoc_mesenteroides_23_default_mmrsagar_3_07102022120822.jpg",
     "usedAgar": 0.0,
     "countedColonies": 88.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "cocci_leuconostoc_mesenteroides_8_default_mmrsbpb_4_18112022125635.png",
+    "fileName": "cocci_leuconostoc_mesenteroides_8_default_mmrsbpb_4_18112022125635.jpg",
     "usedAgar": 1.0,
     "countedColonies": 58.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "cocci_leuconostoc_mesenteroides_8_default_mmrsbpb_3_07102022161327.png",
+    "fileName": "cocci_leuconostoc_mesenteroides_8_default_mmrsbpb_3_07102022161327.jpg",
     "usedAgar": 1.0,
     "countedColonies": 64.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "cocci_leuconostoc_mesenteroides_8_default_mmrsbpb_3_07102022114855.png",
+    "fileName": "cocci_leuconostoc_mesenteroides_8_default_mmrsbpb_3_07102022114855.jpg",
     "usedAgar": 1.0,
     "countedColonies": 48.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "cocci_leuconostoc_mesenteroides_8_default_mmrsagar_4_18112022125650.png",
+    "fileName": "cocci_leuconostoc_mesenteroides_8_default_mmrsagar_4_18112022125650.jpg",
     "usedAgar": 0.0,
     "countedColonies": 39.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "cocci_leuconostoc_mesenteroides_8_default_mmrsagar_3_07102022161348.png",
+    "fileName": "cocci_leuconostoc_mesenteroides_8_default_mmrsagar_3_07102022161348.jpg",
     "usedAgar": 0.0,
     "countedColonies": 74.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "cocci_leuconostoc_mesenteroides_8_default_mmrsagar_3_07102022114914.png",
+    "fileName": "cocci_leuconostoc_mesenteroides_8_default_mmrsagar_3_07102022114914.jpg",
     "usedAgar": 0.0,
     "countedColonies": 57.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "cocci_leuconostoc_lactis_36_default_mmrsbpb_4_18112022125317.png",
+    "fileName": "cocci_leuconostoc_lactis_36_default_mmrsbpb_4_18112022125317.jpg",
     "usedAgar": 1.0,
     "countedColonies": 116.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "cocci_leuconostoc_lactis_36_default_mmrsbpb_3_07102022115812_0.png",
+    "fileName": "cocci_leuconostoc_lactis_36_default_mmrsbpb_3_07102022115812_0.jpg",
     "usedAgar": 1.0,
     "countedColonies": 0.0,
     "markedFileExist": 0.0,
     "comments": null
   },
   {
-    "fileName": "cocci_leuconostoc_lactis_36_default_mmrsagar_4_18112022125332.png",
+    "fileName": "cocci_leuconostoc_lactis_36_default_mmrsagar_4_18112022125332.jpg",
     "usedAgar": 0.0,
     "countedColonies": 53.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "cocci_leuconostoc_lactis_36_default_mmrsagar_3_07102022115753_0.png",
+    "fileName": "cocci_leuconostoc_lactis_36_default_mmrsagar_3_07102022115753_0.jpg",
     "usedAgar": 0.0,
     "countedColonies": 0.0,
     "markedFileExist": 0.0,
     "comments": null
   },
   {
-    "fileName": "cocci_enterococcus_pseudoavium_1_default_mmrsbpb_3_07102022115702.png",
+    "fileName": "cocci_enterococcus_pseudoavium_1_default_mmrsbpb_3_07102022115702.jpg",
     "usedAgar": 1.0,
     "countedColonies": 13.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "cocci_enterococcus_saccharolyticus_15_default_mmrsbpb_3_07102022160549.png",
+    "fileName": "cocci_enterococcus_saccharolyticus_15_default_mmrsbpb_3_07102022160549.jpg",
     "usedAgar": 1.0,
     "countedColonies": 94.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "cocci_aerococcus_viridans_34_default_mmrsbpb_3_07102022161025.png",
+    "fileName": "cocci_aerococcus_viridans_34_default_mmrsbpb_3_07102022161025.jpg",
     "usedAgar": 1.0,
     "countedColonies": 0.0,
     "markedFileExist": 0.0,
     "comments": null
   },
   {
-    "fileName": "cocci_aerococcus_viridans_34_default_mmrsbpb_4_18112022130303.png",
+    "fileName": "cocci_aerococcus_viridans_34_default_mmrsbpb_4_18112022130303.jpg",
     "usedAgar": 1.0,
     "countedColonies": 111.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "cocci_aerococcus_viridans_12_default_mmrsbpb_3_07102022115059.png",
+    "fileName": "cocci_aerococcus_viridans_12_default_mmrsbpb_3_07102022115059.jpg",
     "usedAgar": 1.0,
     "countedColonies": 1.0,
     "markedFileExist": 0.0,
     "comments": null
   },
   {
-    "fileName": "cocci_weissella_hellenica_2_default_mmrsagar_3_07102022160439.png",
+    "fileName": "cocci_weissella_hellenica_2_default_mmrsagar_3_07102022160439.jpg",
     "usedAgar": 0.0,
     "countedColonies": 20.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "cocci_weissella_hellenica_2_default_mmrsbpb_3_07102022160501.png",
+    "fileName": "cocci_weissella_hellenica_2_default_mmrsbpb_3_07102022160501.jpg",
     "usedAgar": 1.0,
     "countedColonies": 25.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "cocci_weissella_paramesenteroides_33_default_mmrsagar_3_07102022160842.png",
+    "fileName": "cocci_weissella_paramesenteroides_33_default_mmrsagar_3_07102022160842.jpg",
     "usedAgar": 0.0,
     "countedColonies": 0.0,
     "markedFileExist": 0.0,
     "comments": null
   },
   {
-    "fileName": "cocci_weissella_paramesenteroides_33_default_mmrsagar_4_18112022130222.png",
+    "fileName": "cocci_weissella_paramesenteroides_33_default_mmrsagar_4_18112022130222.jpg",
     "usedAgar": 0.0,
     "countedColonies": 45.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "cocci_weissella_paramesenteroides_33_default_mmrsbpb_3_07102022160824.png",
+    "fileName": "cocci_weissella_paramesenteroides_33_default_mmrsbpb_3_07102022160824.jpg",
     "usedAgar": 1.0,
     "countedColonies": 0.0,
     "markedFileExist": 0.0,
     "comments": null
   },
   {
-    "fileName": "cocci_weissella_paramesenteroides_33_default_mmrsbpb_4_18112022130237.png",
+    "fileName": "cocci_weissella_paramesenteroides_33_default_mmrsbpb_4_18112022130237.jpg",
     "usedAgar": 1.0,
     "countedColonies": 38.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "rod_lactiplantibacillus_plantarum_32_default_mmrsbpb_3_07102022161121.png",
+    "fileName": "rod_lactiplantibacillus_plantarum_32_default_mmrsbpb_3_07102022161121.jpg",
     "usedAgar": 1.0,
     "countedColonies": 3534.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "rod_lactiplantibacillus_plantarum_38_default_mmrsbpb_3_07102022120104.png",
+    "fileName": "rod_lactiplantibacillus_plantarum_38_default_mmrsbpb_3_07102022120104.jpg",
     "usedAgar": 1.0,
     "countedColonies": 52.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "rod_lactobacillus_rennongilfy_35_default_mmrsagar_3_07102022120149.png",
-    "usedAgar": 0.0,
-    "countedColonies": 406.0,
-    "markedFileExist": 1.0,
-    "comments": null
-  },
-  {
-    "fileName": "rod_lactobacillus_rennongilfy_35_default_mmrsagar_4_18112022130337.png",
+    "fileName": "rod_lactobacillus_rennongilfy_35_default_mmrsagar_4_18112022130337.jpg",
     "usedAgar": 0.0,
     "countedColonies": 107.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "rod_lactobacillus_rennongilfy_35_default_mmrsbpb_3_07102022120125.png",
+    "fileName": "rod_lactobacillus_rennongilfy_35_default_mmrsbpb_3_07102022120125.jpg",
     "usedAgar": 1.0,
     "countedColonies": 363.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "rod_lactobacillus_rennongilfy_35_default_mmrsbpb_4_18112022130356.png",
+    "fileName": "rod_lactobacillus_rennongilfy_35_default_mmrsbpb_4_18112022130356.jpg",
     "usedAgar": 1.0,
     "countedColonies": 97.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "rod_latilactobacillus_sakei_E_default_mmrsagar_4_18112022125208.png",
+    "fileName": "rod_latilactobacillus_sakei_E_default_mmrsagar_4_18112022125208.jpg",
     "usedAgar": 0.0,
     "countedColonies": 70.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "rod_latilactobacillus_sakei_E_default_mmrsbpb_4_18112022125229.png",
+    "fileName": "rod_latilactobacillus_sakei_E_default_mmrsbpb_4_18112022125229.jpg",
     "usedAgar": 1.0,
     "countedColonies": 71.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "rod_lentilactobacillus_buchneri_19_default_mmrsagar_3_07102022120939.png",
+    "fileName": "rod_lentilactobacillus_buchneri_19_default_mmrsagar_3_07102022120939.jpg",
     "usedAgar": 0.0,
     "countedColonies": 138.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "rod_lentilactobacillus_buchneri_19_default_mmrsagar_4_18112022125727.png",
+    "fileName": "rod_lentilactobacillus_buchneri_19_default_mmrsagar_4_18112022125727.jpg",
     "usedAgar": 0.0,
     "countedColonies": 139.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "rod_lentilactobacillus_buchneri_19_default_mmrsbpb_3_07102022120903.png",
+    "fileName": "rod_lentilactobacillus_buchneri_19_default_mmrsbpb_3_07102022120903.jpg",
     "usedAgar": 1.0,
     "countedColonies": 131.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "rod_lentilactobacillus_buchneri_19_default_mmrsbpb_4_18112022125711.png",
+    "fileName": "rod_lentilactobacillus_buchneri_19_default_mmrsbpb_4_18112022125711.jpg",
     "usedAgar": 1.0,
     "countedColonies": 195.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "rod_lentilactobacillus_buchneri_20_default_mmrsagar_3_07102022120802.png",
+    "fileName": "rod_lentilactobacillus_buchneri_20_default_mmrsagar_3_07102022120802.jpg",
     "usedAgar": 0.0,
     "countedColonies": 234.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "rod_lentilactobacillus_buchneri_20_default_mmrsagar_4_18112022125851.png",
+    "fileName": "rod_lentilactobacillus_buchneri_20_default_mmrsagar_4_18112022125851.jpg",
     "usedAgar": 0.0,
     "countedColonies": 146.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "rod_lentilactobacillus_buchneri_20_default_mmrsbpb_3_07102022120738.png",
+    "fileName": "rod_lentilactobacillus_buchneri_20_default_mmrsbpb_3_07102022120738.jpg",
     "usedAgar": 1.0,
     "countedColonies": 190.0,
     "markedFileExist": 1.0,
     "comments": null
   },
   {
-    "fileName": "rod_lentilactobacillus_buchneri_20_default_mmrsbpb_4_18112022125836.png",
+    "fileName": "rod_lentilactobacillus_buchneri_20_default_mmrsbpb_4_18112022125836.jpg",
     "usedAgar": 1.0,
     "countedColonies": 96.0,
     "markedFileExist": 1.0,
