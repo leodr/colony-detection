@@ -1,7 +1,9 @@
 import csv
 import json
+import os
 import sys
 import time
+from pathlib import Path
 
 import cv2
 import numpy as np
@@ -27,7 +29,11 @@ def create_masks():
             mask = algorithm.create_mask(image)
 
             mask_filename = file_name.replace(".jpg", ".png")
-            cv2.imwrite(mask_filename, mask)
+
+            path = Path("../data/counted/masks")
+            path.mkdir(parents=True, exist_ok=True)
+
+            cv2.imwrite(os.path.join(path, mask_filename), mask)
 
 
 create_masks()
