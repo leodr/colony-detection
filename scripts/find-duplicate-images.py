@@ -18,6 +18,7 @@ def find_duplicates(pattern):
     duplicates = []
 
     for filepath in glob.glob(pattern):
+        print("Computing hash of: ", filepath)
         if filepath.lower().endswith((".png", ".jpg", ".jpeg", ".gif", ".bmp")):
             filehash = file_hash(filepath)
 

@@ -1,18 +1,23 @@
 # Checks if the files listed in the JSON file are present in the directory and
 # vice versa
-import json
+import csv
 import os
 
 # Define the path to the directory and the JSON file
 dir_path = "data/counted"
-json_file_path = os.path.join(dir_path, "metadata.json")
+json_file_path = os.path.join(dir_path, "metadata.csv")
 
 # Load the JSON file
 with open(json_file_path, "r") as f:
-    data = json.load(f)
+    reader = csv.DictReader(f)
+
+    data = []
+    for row in reader:
+        data.append(row)
+
 
 # Get the list of file names from the JSON data
-json_file_names = [item["fileName"] for item in data]
+json_file_names = [item["filename"] for item in data]
 
 print("Number of files in JSON:", len(json_file_names))
 
