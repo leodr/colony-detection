@@ -1,0 +1,250 @@
+import {
+  ArrowLeftIcon,
+  ArrowRightIcon,
+  ArrowUturnLeftIcon,
+  EyeSlashIcon,
+  TrashIcon,
+} from "@heroicons/react/20/solid";
+import { MouseEvent, useEffect, useMemo, useRef, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { removeSelectedImage, selectPreviousImage } from "./images-slice";
+import { mergeMaskImagesToImageElement } from "./merge-mask-images";
+import { RootState } from "./store";
+import { useStack } from "./use-stack";
+import { getBase64FromObjectUrl } from "./util/base64-from-objecturl";
+import { getImageCoordinates } from "./util/image-coordinates";
+
+export function Canvas() {
+  const dispatch = useDispatch();
+  const selectedImage = useSelector(
+    (state: RootState) => state.images.selectedImage
+  );
+  const images = useSelector((state: RootState) => state.images.entities);
+
+  const selectedImageUrl = useMemo(() => {
+    if (selectedImage == null) {
+      return null;
+    }
+
+    return images[selectedImage]?.url;
+  }, [images, selectedImage]);
+
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  const {
+    top: mask,
+    clear: clearMasks,
+    push: pushMask,
+    pop: popMask,
+  } = useStack<HTMLImageElement>(5);
+  const [image, setImage] = useState<HTMLImageElement | null>(null);
+
+  const [showMask, setShowMask] = useState(true);
+
+  useEffect(() => {
+    if (selectedImage == null) {
+      setImage(null);
+      return;
+    }
+
+    clearMasks();
+
+    const imageUrl = images[selectedImage]?.url;
+
+    if (imageUrl != null) {
+      const img = new Image();
+      img.onload = () => {
+        setImage(img);
+      };
+      img.src = imageUrl;
+    }
+  }, [clearMasks, images, selectedImage]);
+
+  useEffect(() => {
+    if (selectedImageUrl) {
+      getBase64FromObjectUrl(selectedImageUrl).then((base64) =>
+        fetch("http://localhost:8000/set-image", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ base64_image: base64 }),
+        })
+      );
+    }
+  }, [selectedImageUrl]);
+
+  useEffect(() => {
+    if (canvasRef.current) {
+      const ctx = canvasRef.current.getContext("2d")!;
+      const canvasWidth = canvasRef.current.width;
+      const canvasHeight = canvasRef.current.height;
+
+      if (image) {
+        ctx.drawImage(image, 0, 0, canvasWidth, canvasHeight);
+
+        if (mask && showMask) {
+          const canvas = document.createElement("canvas");
+          const ctx2 = canvas.getContext("2d")!;
+
+          canvas.width = canvasWidth;
+          canvas.height = canvasHeight;
+
+          ctx2.drawImage(mask, 0, 0, canvasWidth, canvasHeight);
+          const imageData = ctx2.getImageData(0, 0, canvasWidth, canvasHeight);
+
+          for (let i = 0; i < imageData.data.length; i += 4) {
+            // mergedData.data[i] = 255; // Red
+            // mergedData.data[i + 1] = 255; // Green
+            // mergedData.data[i + 2] = 255; // Blue
+            imageData.data[i + 3] = 128; // Alpha
+          }
+
+          ctx2.putImageData(imageData, 0, 0);
+
+          ctx.drawImage(canvas, 0, 0, canvasWidth, canvasHeight);
+        }
+      } else {
+        ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+      }
+    }
+  }, [image, mask, showMask]);
+
+  function handleCanvasClick(e: MouseEvent<HTMLCanvasElement>) {
+    if (image != null) {
+      const relativeX = e.nativeEvent.offsetX;
+      const relativeY = e.nativeEvent.offsetY;
+
+      const target = e.target as HTMLCanvasElement;
+
+      // Calculate screen size of canvas
+      const canvasWidth = target.clientWidth;
+      const canvasHeight = target.clientHeight;
+
+      const imageCoordinates = getImageCoordinates(
+        { x: relativeX, y: relativeY },
+        { width: canvasWidth, height: canvasHeight },
+        { width: image.width, height: image.height }
+      );
+
+      fetch(
+        `http://localhost:8000/predict-from-coords?x=${imageCoordinates.x}&y=${imageCoordinates.y}`
+      ).then((response) => {
+        response.json().then((json) => {
+          const image = json["mask_image"];
+
+          // Read image as base64 and set it as the mask
+          const img = new Image();
+          img.onload = () => {
+            if (mask) {
+              mergeMaskImagesToImageElement(mask, img).then((mergedImage) => {
+                pushMask(mergedImage);
+              });
+            } else {
+              pushMask(img);
+            }
+          };
+          // Add base64 prefix
+          img.src = "data:image/png;base64," + image;
+        });
+      });
+    }
+  }
+
+  function handleDownloadAndNext() {
+    if (mask && selectedImage) {
+      const canvas = document.createElement("canvas");
+      canvas.width = mask.width;
+      canvas.height = mask.height;
+
+      const ctx = canvas.getContext("2d")!;
+      ctx.drawImage(mask, 0, 0, mask.width, mask.height);
+
+      const link = document.createElement("a");
+
+      link.download =
+        images[selectedImage]?.filename.split(".").slice(0, -1).join(".") +
+        "_mask.png";
+      link.href = canvas.toDataURL("image/png");
+
+      link.click();
+    }
+
+    dispatch(removeSelectedImage());
+  }
+
+  return (
+    <main className="flex flex-1 items-center justify-center relative">
+      <canvas
+        className="border w-[800px] h-[800px]"
+        ref={canvasRef}
+        width={image?.width ?? 800}
+        height={image?.height ?? 800}
+        onClick={handleCanvasClick}
+      />
+      <div className="flex whitespace-nowrap gap-2 items-center shadow absolute text-white bottom-0 left-1/2 transform -translate-x-1/2 bg-gray-800 p-2">
+        <button
+          type="button"
+          className="inline-flex items-center gap-x-2 rounded-md bg-white/10 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-white/20"
+          onClick={() => {
+            popMask();
+          }}
+        >
+          <ArrowUturnLeftIcon
+            className="-ml-0.5 h-5 w-5 text-gray-400"
+            aria-hidden="true"
+          />
+          Undo
+        </button>
+        <button
+          type="button"
+          className="inline-flex items-center gap-x-2 rounded-md bg-white/10 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-white/20"
+          onClick={() => {
+            clearMasks();
+          }}
+        >
+          <TrashIcon
+            className="-ml-0.5 h-5 w-5 text-gray-400"
+            aria-hidden="true"
+          />
+          Clear mask
+        </button>
+        <button
+          type="button"
+          className="inline-flex items-center gap-x-2 rounded-md bg-white/10 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-white/20"
+          onClick={() => {
+            setShowMask((curr) => !curr);
+          }}
+        >
+          <EyeSlashIcon
+            className="-ml-0.5 h-5 w-5 text-gray-400"
+            aria-hidden="true"
+          />
+          Hide mask
+        </button>
+        <div>13 gezählt</div>
+        <button
+          type="button"
+          className="inline-flex items-center gap-x-2 rounded-md bg-white/10 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-white/20"
+          onClick={() => {
+            dispatch(selectPreviousImage());
+          }}
+        >
+          <ArrowLeftIcon
+            className="-ml-0.5 h-5 w-5 text-gray-400"
+            aria-hidden="true"
+          />
+        </button>
+        <button
+          type="button"
+          className="inline-flex items-center gap-x-2 rounded-md bg-white/10 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-white/20"
+          onClick={handleDownloadAndNext}
+        >
+          <ArrowRightIcon
+            className="-ml-0.5 h-5 w-5 text-gray-400"
+            aria-hidden="true"
+          />
+          Download & Next
+        </button>
+      </div>
+    </main>
+  );
+}
