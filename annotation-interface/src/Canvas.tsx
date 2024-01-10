@@ -3,6 +3,8 @@ import {
   ArrowRightIcon,
   ArrowUturnLeftIcon,
   EyeSlashIcon,
+  MinusIcon,
+  PlusIcon,
   TrashIcon,
 } from "@heroicons/react/20/solid";
 import { MouseEvent, useEffect, useMemo, useRef, useState } from "react";
@@ -20,6 +22,8 @@ export function Canvas() {
     (state: RootState) => state.images.selectedImage
   );
   const images = useSelector((state: RootState) => state.images.entities);
+
+  const [imageSetState, setImageSetState] = useState<string>("idle");
 
   const selectedImageUrl = useMemo(() => {
     if (selectedImage == null) {
@@ -40,6 +44,7 @@ export function Canvas() {
   const [image, setImage] = useState<HTMLImageElement | null>(null);
 
   const [showMask, setShowMask] = useState(true);
+  const [counter, setCounter] = useState(0);
 
   useEffect(() => {
     if (selectedImage == null) {
@@ -48,6 +53,7 @@ export function Canvas() {
     }
 
     clearMasks();
+    setCounter(0);
 
     const imageUrl = images[selectedImage]?.url;
 
@@ -62,13 +68,16 @@ export function Canvas() {
 
   useEffect(() => {
     if (selectedImageUrl) {
-      getBase64FromObjectUrl(selectedImageUrl).then((base64) =>
-        fetch("http://localhost:8000/set-image", {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ base64_image: base64 }),
-        })
-      );
+      setImageSetState("loading");
+      getBase64FromObjectUrl(selectedImageUrl)
+        .then((base64) =>
+          fetch("http://localhost:8000/set-image", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ base64_image: base64 }),
+          })
+        )
+        .finally(() => setImageSetState("idle"));
     }
   }, [selectedImageUrl]);
 
@@ -109,7 +118,11 @@ export function Canvas() {
   }, [image, mask, showMask]);
 
   function handleCanvasClick(e: MouseEvent<HTMLCanvasElement>) {
-    if (image != null) {
+    if (image != null && imageSetState === "idle") {
+      if (!e.altKey) {
+        setCounter((counter) => counter + 1);
+      }
+
       const relativeX = e.nativeEvent.offsetX;
       const relativeY = e.nativeEvent.offsetY;
 
@@ -162,7 +175,7 @@ export function Canvas() {
 
       link.download =
         images[selectedImage]?.filename.split(".").slice(0, -1).join(".") +
-        "_mask.png";
+        `_mask_${counter}.png`;
       link.href = canvas.toDataURL("image/png");
 
       link.click();
@@ -173,19 +186,52 @@ export function Canvas() {
 
   return (
     <main className="flex flex-1 items-center justify-center relative">
-      <canvas
-        className="border w-[800px] h-[800px]"
-        ref={canvasRef}
-        width={image?.width ?? 800}
-        height={image?.height ?? 800}
-        onClick={handleCanvasClick}
-      />
-      <div className="flex whitespace-nowrap gap-2 items-center shadow absolute text-white bottom-0 left-1/2 transform -translate-x-1/2 bg-gray-800 p-2">
+      <div className="relative">
+        <canvas
+          className={`rounded border border-gray-500 w-[800px] h-[800px] graph ${
+            imageSetState === "loading" ? "animate-pulse grayscale" : ""
+          }`}
+          ref={canvasRef}
+          width={image?.width ?? 800}
+          height={image?.height ?? 800}
+          onClick={handleCanvasClick}
+        />
+        <button
+          type="button"
+          className="absolute top-100 mt-2 left-1/2 transform -translate-x-1/2 inline-flex items-center gap-x-2 rounded-sm px-3 py-1.5 text-sm text-gray-200 shadow-sm hover:bg-white/10 border border-gray-700"
+          onClick={() => {
+            setShowMask((curr) => !curr);
+          }}
+        >
+          <EyeSlashIcon
+            className="-ml-0.5 h-4 w-4 text-gray-500"
+            aria-hidden="true"
+          />
+          <div className="grid">
+            <span
+              className="col-start-1 col-span-1 row-start-1 row-span-1"
+              aria-hidden={showMask}
+              style={{ visibility: !showMask ? "hidden" : "visible" }}
+            >
+              Hide mask
+            </span>
+            <span
+              className="col-start-1 col-span-1 row-start-1 row-span-1"
+              aria-hidden={!showMask}
+              style={{ visibility: showMask ? "hidden" : "visible" }}
+            >
+              Show mask
+            </span>
+          </div>
+        </button>
+      </div>
+      <div className="flex whitespace-nowrap gap-2 items-center shadow absolute text-white bottom-0 left-1/2 transform -translate-x-1/2 bg-gray-800 p-2 border-2 border-gray-500 rounded-lg">
         <button
           type="button"
           className="inline-flex items-center gap-x-2 rounded-md bg-white/10 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-white/20"
           onClick={() => {
             popMask();
+            setCounter((counter) => Math.max(counter - 1, 0));
           }}
         >
           <ArrowUturnLeftIcon
@@ -199,6 +245,7 @@ export function Canvas() {
           className="inline-flex items-center gap-x-2 rounded-md bg-white/10 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-white/20"
           onClick={() => {
             clearMasks();
+            setCounter(0);
           }}
         >
           <TrashIcon
@@ -207,20 +254,26 @@ export function Canvas() {
           />
           Clear mask
         </button>
-        <button
-          type="button"
-          className="inline-flex items-center gap-x-2 rounded-md bg-white/10 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-white/20"
-          onClick={() => {
-            setShowMask((curr) => !curr);
-          }}
-        >
-          <EyeSlashIcon
-            className="-ml-0.5 h-5 w-5 text-gray-400"
-            aria-hidden="true"
-          />
-          Hide mask
-        </button>
-        <div>13 gezählt</div>
+        <div className="flex px-4">
+          <button
+            className="p-2 text-gray-400 hover:text-gray-200"
+            onClick={() => setCounter((counter) => Math.max(counter - 1, 0))}
+          >
+            <MinusIcon className="-ml-0.5 h-5 w-5" aria-hidden="true" />
+          </button>
+          <div className="flex flex-col items-center gap-1">
+            <span className="text-lg text-center leading-none">
+              {new Intl.NumberFormat().format(counter)}
+            </span>
+            <span className="text-sm text-gray-500 leading-none">counted</span>
+          </div>
+          <button
+            className="p-2 text-gray-400 hover:text-gray-200"
+            onClick={() => setCounter((counter) => counter + 1)}
+          >
+            <PlusIcon className="-ml-0.5 h-5 w-5" aria-hidden="true" />
+          </button>
+        </div>
         <button
           type="button"
           className="inline-flex items-center gap-x-2 rounded-md bg-white/10 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-white/20"
