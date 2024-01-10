@@ -9,6 +9,7 @@ import {
 } from "@heroicons/react/20/solid";
 import { MouseEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { tinykeys } from "tinykeys";
 import { removeSelectedImage, selectPreviousImage } from "./images-slice";
 import { mergeMaskImagesToImageElement } from "./merge-mask-images";
 import { RootState } from "./store";
@@ -45,6 +46,34 @@ export function Canvas() {
 
   const [showMask, setShowMask] = useState(true);
   const [counter, setCounter] = useState(0);
+
+  useEffect(() => {
+    const unsubscribe = tinykeys(window, {
+      h: () => {
+        setShowMask((curr) => !curr);
+      },
+      ArrowLeft: () => {
+        dispatch(selectPreviousImage());
+      },
+      ArrowRight: () => {
+        handleDownloadAndNext();
+      },
+      "+": () => {
+        setCounter((counter) => counter + 1);
+      },
+      "-": () => {
+        setCounter((counter) => Math.max(counter - 1, 0));
+      },
+      "$mod+z": () => {
+        popMask();
+        setCounter((counter) => Math.max(counter - 1, 0));
+      },
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [dispatch, handleDownloadAndNext, popMask]);
 
   useEffect(() => {
     if (selectedImage == null) {
@@ -163,13 +192,17 @@ export function Canvas() {
   }
 
   function handleDownloadAndNext() {
-    if (mask && selectedImage) {
+    if (image && selectedImage) {
       const canvas = document.createElement("canvas");
-      canvas.width = mask.width;
-      canvas.height = mask.height;
+      canvas.width = image.width;
+      canvas.height = image.height;
 
       const ctx = canvas.getContext("2d")!;
-      ctx.drawImage(mask, 0, 0, mask.width, mask.height);
+      ctx.fillStyle = "#000000";
+      ctx.fillRect(0, 0, image.width, image.height);
+      if (mask) {
+        ctx.drawImage(mask, 0, 0, mask.width, mask.height);
+      }
 
       const link = document.createElement("a");
 
@@ -255,12 +288,17 @@ export function Canvas() {
           Clear mask
         </button>
         <div className="flex px-4">
-          <button
-            className="p-2 text-gray-400 hover:text-gray-200"
-            onClick={() => setCounter((counter) => Math.max(counter - 1, 0))}
-          >
-            <MinusIcon className="-ml-0.5 h-5 w-5" aria-hidden="true" />
-          </button>
+          <>
+            <button
+              className="p-2 text-gray-400 hover:text-gray-200"
+              onClick={(e) => {
+                const decrease = e.shiftKey ? 10 : 1;
+                setCounter((counter) => Math.max(counter - decrease, 0));
+              }}
+            >
+              <MinusIcon className="-ml-0.5 h-5 w-5" aria-hidden="true" />
+            </button>
+          </>
           <div className="flex flex-col items-center gap-1">
             <span className="text-lg text-center leading-none">
               {new Intl.NumberFormat().format(counter)}
@@ -269,7 +307,10 @@ export function Canvas() {
           </div>
           <button
             className="p-2 text-gray-400 hover:text-gray-200"
-            onClick={() => setCounter((counter) => counter + 1)}
+            onClick={(e) => {
+              const increase = e.shiftKey ? 10 : 1;
+              setCounter((counter) => counter + increase);
+            }}
           >
             <PlusIcon className="-ml-0.5 h-5 w-5" aria-hidden="true" />
           </button>
