@@ -36,6 +36,8 @@ const imagesSlice = createSlice({
 
         state.selectedImage = newId;
 
+        URL.revokeObjectURL(state.entities[currentlySelectedImage]?.url);
+
         imagesAdapter.removeOne(state, currentlySelectedImage);
       }
     },
