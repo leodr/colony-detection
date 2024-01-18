@@ -7,7 +7,14 @@ import {
   PlusIcon,
   TrashIcon,
 } from "@heroicons/react/20/solid";
-import { MouseEvent, useEffect, useMemo, useRef, useState } from "react";
+import {
+  MouseEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { tinykeys } from "tinykeys";
 import { removeSelectedImage, selectPreviousImage } from "./images-slice";
@@ -15,7 +22,7 @@ import { mergeMaskImagesToImageElement } from "./merge-mask-images";
 import { RootState } from "./store";
 import { useStack } from "./use-stack";
 import { getBase64FromObjectUrl } from "./util/base64-from-objecturl";
-import { getImageCoordinates } from "./util/image-coordinates";
+import { Coordinates, getImageCoordinates } from "./util/image-coordinates";
 
 export function Canvas() {
   const dispatch = useDispatch();
@@ -47,6 +54,25 @@ export function Canvas() {
   const [showMask, setShowMask] = useState(true);
   const [counter, setCounter] = useState(0);
 
+  const {
+    clear: clearClicks,
+    pop: popClick,
+    push: pushClick,
+    stack: clickStack,
+  } = useStack<Coordinates>(Infinity);
+
+  const undo = useCallback(() => {
+    popMask();
+    popClick();
+    setCounter((counter) => Math.max(counter - 1, 0));
+  }, [popClick, popMask]);
+
+  const clear = useCallback(() => {
+    clearMasks();
+    clearClicks();
+    setCounter(0);
+  }, [clearClicks, clearMasks]);
+
   useEffect(() => {
     const unsubscribe = tinykeys(window, {
       h: () => {
@@ -65,15 +91,14 @@ export function Canvas() {
         setCounter((counter) => Math.max(counter - 1, 0));
       },
       "$mod+z": () => {
-        popMask();
-        setCounter((counter) => Math.max(counter - 1, 0));
+        undo();
       },
     });
 
     return () => {
       unsubscribe();
     };
-  }, [dispatch, handleDownloadAndNext, popMask]);
+  }, [dispatch, handleDownloadAndNext, undo]);
 
   useEffect(() => {
     if (selectedImage == null) {
@@ -81,8 +106,7 @@ export function Canvas() {
       return;
     }
 
-    clearMasks();
-    setCounter(0);
+    clear();
 
     const imageUrl = images[selectedImage]?.url;
 
@@ -93,7 +117,7 @@ export function Canvas() {
       };
       img.src = imageUrl;
     }
-  }, [clearMasks, images, selectedImage]);
+  }, [clear, images, selectedImage]);
 
   useEffect(() => {
     if (selectedImageUrl) {
@@ -177,12 +201,15 @@ export function Canvas() {
           const img = new Image();
           img.onload = () => {
             if (mask) {
+              console.time("merge");
               mergeMaskImagesToImageElement(mask, img).then((mergedImage) => {
                 pushMask(mergedImage);
+                console.timeEnd("merge");
               });
             } else {
               pushMask(img);
             }
+            pushClick(imageCoordinates);
           };
           // Add base64 prefix
           img.src = "data:image/png;base64," + image;
@@ -204,14 +231,23 @@ export function Canvas() {
         ctx.drawImage(mask, 0, 0, mask.width, mask.height);
       }
 
-      const link = document.createElement("a");
+      fetch("http://localhost:8000/colorize-from-coordinates", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          coordinates: clickStack.map((e) => [e.x, e.y]),
+          base64_image: canvas.toDataURL("image/png"),
+        }),
+      });
 
-      link.download =
-        images[selectedImage]?.filename.split(".").slice(0, -1).join(".") +
-        `_mask_${counter}.png`;
-      link.href = canvas.toDataURL("image/png");
+      // const link = document.createElement("a");
 
-      link.click();
+      // link.download =
+      //   images[selectedImage]?.filename.split(".").slice(0, -1).join(".") +
+      //   `_mask_${counter}.png`;
+      // link.href = canvas.toDataURL("image/png");
+
+      // link.click();
     }
 
     dispatch(removeSelectedImage());
@@ -262,10 +298,7 @@ export function Canvas() {
         <button
           type="button"
           className="inline-flex items-center gap-x-2 rounded-md bg-white/10 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-white/20"
-          onClick={() => {
-            popMask();
-            setCounter((counter) => Math.max(counter - 1, 0));
-          }}
+          onClick={undo}
         >
           <ArrowUturnLeftIcon
             className="-ml-0.5 h-5 w-5 text-gray-400"
@@ -276,10 +309,7 @@ export function Canvas() {
         <button
           type="button"
           className="inline-flex items-center gap-x-2 rounded-md bg-white/10 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-white/20"
-          onClick={() => {
-            clearMasks();
-            setCounter(0);
-          }}
+          onClick={clear}
         >
           <TrashIcon
             className="-ml-0.5 h-5 w-5 text-gray-400"

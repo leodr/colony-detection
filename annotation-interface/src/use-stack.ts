@@ -26,5 +26,5 @@ export function useStack<T>(size: number) {
     setStack([]);
   }, []);
 
-  return { push, pop, clear, top };
+  return { push, pop, clear, top, stack };
 }

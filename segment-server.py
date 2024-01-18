@@ -8,8 +8,10 @@ import torch
 from fastapi import FastAPI, HTTPException
 from PIL import Image
 from pydantic import BaseModel
-from scipy.spatial import KDTree
+from scipy.ndimage import find_objects, label
+from scipy.spatial import KDTree, cKDTree
 from segment_anything import SamPredictor, sam_model_registry
+from skimage.measure import label
 
 sam = sam_model_registry["vit_h"](checkpoint="sam_vit_h_4b8939.pth")
 if torch.backends.mps.is_available():
@@ -79,70 +81,76 @@ class ColorizeData(BaseModel):
     coordinates: list[Tuple[int, int]]  # List of (x, y) tuples
 
 
-def create_color_map(kd_tree, shape, colors):
-    # Create a grid of coordinates (y, x)
-    yy, xx = np.mgrid[0 : shape[0], 0 : shape[1]]
-    coords = np.c_[yy.ravel(), xx.ravel()]
+def generate_unique_colors(n):
+    colors = set()
+    while len(colors) < n:
+        color = (
+            random.randint(64, 255),
+            random.randint(64, 255),
+            random.randint(64, 255),
+        )  # Avoid dark colors
+        colors.add(color)
+    return list(colors)
 
-    # Query the KDTree for nearest coordinate index for each pixel in the grid
-    _, indices = kd_tree.query(coords)
 
-    # Map the indices to colors
-    color_map = np.array([colors[idx] for idx in indices])
-    return color_map.reshape(shape[0], shape[1], 3)
+class ColorizeData(BaseModel):
+    base64_image: str
+    coordinates: list[Tuple[int, int]]  # List of (x, y) tuples
 
 
 def preprocess_image(image_array):
-    # Convert the image to grayscale
+    # Convert the image to grayscale and apply threshold
     grayscale = np.mean(image_array, axis=2)
-
-    # Apply threshold - pixels closer to 255 become white, closer to 0 become black
-    threshold = 127  # Midpoint of 0 and 255
-    image_array[grayscale >= threshold] = [255, 255, 255]
-    image_array[grayscale < threshold] = [0, 0, 0]
-    return image_array
+    threshold = 127
+    binary_image = np.where(grayscale >= threshold, 1, 0)
+    return binary_image
 
 
 @app.post("/colorize-from-coordinates")
 def colorize_from_coordinates(data: ColorizeData):
     try:
-        # Decode the image
         base64image = data.base64_image.split(",")[1]
         image_bytes = base64.b64decode(base64image)
         image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
         image_array = np.array(image)
 
-        # Preprocess the image to make each pixel either black or white
-        image_array = preprocess_image(image_array)
+        # Preprocess the image to a binary mask
+        binary_mask = preprocess_image(image_array)
 
-        # Check if image is black and white
-        if len(image_array.shape) != 3 or image_array.shape[2] != 3:
-            raise ValueError("Image must be in RGB format")
+        # Segment the image into connected components
+        labeled_array, num_features = label(binary_mask)
 
-        # Generate unique colors
-        unique_colors = generate_unique_colors(len(data.coordinates))
-        colors = dict(zip(range(len(data.coordinates)), unique_colors))
+        # Assign random colors to each coordinate
+        colors = generate_unique_colors(num_features)
+        color_mapping = {i + 1: colors[i] for i in range(num_features)}
 
-        # Adjust coordinates for the KDTree and create the KDTree
-        adjusted_coordinates = [(y, x) for x, y in data.coordinates]
-        kd_tree = KDTree(adjusted_coordinates)
+        # Assign coordinates to regions and create color mapping
+        coord_regions = [labeled_array[y, x] for x, y in data.coordinates]
+        coord_colors = {
+            coord: color_mapping[region]
+            for coord, region in zip(data.coordinates, coord_regions)
+            if region > 0
+        }
 
-        # Create a color map for the entire image
-        color_map = create_color_map(kd_tree, image_array.shape, colors)
+        # Create KDTree for efficient nearest neighbor search
+        tree = cKDTree(data.coordinates)
 
-        # Apply the color map to non-black pixels in the image
-        non_black_pixels = ~(np.all(image_array == [0, 0, 0], axis=-1))
-        image_array[non_black_pixels] = color_map[non_black_pixels]
+        # Colorize the image
+        for y in range(labeled_array.shape[0]):
+            for x in range(labeled_array.shape[1]):
+                region = labeled_array[y, x]
+                if region > 0:
+                    distance, idx = tree.query((x, y))  # Corrected this line
+                    nearest_coord = data.coordinates[idx]
+                    if labeled_array[nearest_coord[1], nearest_coord[0]] == region:
+                        image_array[y, x] = coord_colors[nearest_coord]
 
-        # Convert the array back to an image and then to a base64 string
         colored_img = Image.fromarray(image_array)
         buffered = io.BytesIO()
         colored_img.save(buffered, format="PNG")
         img_str = base64.b64encode(buffered.getvalue()).decode()
 
-        # Save image to file
         colored_img.save("colored.png")
-
         return {"colorized_image": img_str}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
