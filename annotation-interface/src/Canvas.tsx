@@ -3,8 +3,6 @@ import {
   ArrowRightIcon,
   ArrowUturnLeftIcon,
   EyeSlashIcon,
-  MinusIcon,
-  PlusIcon,
   TrashIcon,
 } from "@heroicons/react/20/solid";
 import {
@@ -21,7 +19,6 @@ import { removeSelectedImage, selectPreviousImage } from "./images-slice";
 import { mergeMaskImagesToImageElement } from "./merge-mask-images";
 import { RootState } from "./store";
 import { useStack } from "./use-stack";
-import { getBase64FromObjectUrl } from "./util/base64-from-objecturl";
 import { Coordinates, getImageCoordinates } from "./util/image-coordinates";
 
 export function Canvas() {
@@ -122,15 +119,19 @@ export function Canvas() {
   useEffect(() => {
     if (selectedImageUrl) {
       setImageSetState("loading");
-      getBase64FromObjectUrl(selectedImageUrl)
-        .then((base64) =>
+
+      fetch(selectedImageUrl)
+        .then((response) => response.blob())
+        .then((blob) => {
+          const formData = new FormData();
+
+          formData.append("file", blob);
+
           fetch("http://localhost:8000/set-image", {
             method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ base64_image: base64 }),
-          })
-        )
-        .finally(() => setImageSetState("idle"));
+            body: formData,
+          }).finally(() => setImageSetState("idle"));
+        });
     }
   }, [selectedImageUrl]);
 
@@ -191,30 +192,22 @@ export function Canvas() {
         { width: image.width, height: image.height }
       );
 
-      fetch(
-        `http://localhost:8000/predict-from-coords?x=${imageCoordinates.x}&y=${imageCoordinates.y}`
-      ).then((response) => {
-        response.json().then((json) => {
-          const image = json["mask_image"];
-
-          // Read image as base64 and set it as the mask
+      fetch(`http://localhost:8000/register-click`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          x: imageCoordinates.x,
+          y: imageCoordinates.y,
+        }),
+      })
+        .then((response) => response.blob())
+        .then((blob) => {
           const img = new Image();
           img.onload = () => {
-            if (mask) {
-              console.time("merge");
-              mergeMaskImagesToImageElement(mask, img).then((mergedImage) => {
-                pushMask(mergedImage);
-                console.timeEnd("merge");
-              });
-            } else {
-              pushMask(img);
-            }
-            pushClick(imageCoordinates);
+            pushMask(img);
           };
-          // Add base64 prefix
-          img.src = "data:image/png;base64," + image;
+          img.src = URL.createObjectURL(blob);
         });
-      });
     }
   }
 
@@ -318,32 +311,12 @@ export function Canvas() {
           Clear mask
         </button>
         <div className="flex px-4">
-          <>
-            <button
-              className="p-2 text-gray-400 hover:text-gray-200"
-              onClick={(e) => {
-                const decrease = e.shiftKey ? 10 : 1;
-                setCounter((counter) => Math.max(counter - decrease, 0));
-              }}
-            >
-              <MinusIcon className="-ml-0.5 h-5 w-5" aria-hidden="true" />
-            </button>
-          </>
           <div className="flex flex-col items-center gap-1">
             <span className="text-lg text-center leading-none">
               {new Intl.NumberFormat().format(counter)}
             </span>
             <span className="text-sm text-gray-500 leading-none">counted</span>
           </div>
-          <button
-            className="p-2 text-gray-400 hover:text-gray-200"
-            onClick={(e) => {
-              const increase = e.shiftKey ? 10 : 1;
-              setCounter((counter) => counter + increase);
-            }}
-          >
-            <PlusIcon className="-ml-0.5 h-5 w-5" aria-hidden="true" />
-          </button>
         </div>
         <button
           type="button"
