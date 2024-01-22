@@ -52,23 +52,23 @@ def merge_masks(
 
     inside_mask = floodfill_mask[y_coords, x_coords] == 255
 
-    inside_fill_area_points_with_colors = center_points_with_colors[inside_mask]
+    center_points_with_colors_within_fill = center_points_with_colors[inside_mask]
 
-    tree = KDTree([point[:2] for point in inside_fill_area_points_with_colors])
+    tree = KDTree([point[:2] for point in center_points_with_colors_within_fill])
 
-    white_pixels = np.argwhere(floodfill_mask == 255)
+    floodfill_indices = np.argwhere(floodfill_mask == 255)
 
     result_mask = existing_mask.copy()
 
-    transposed = white_pixels[:, [1, 0]]
+    floodfill_indices_columns_swapped = floodfill_indices[:, [1, 0]]
 
-    _, indices = tree.query(transposed)
+    _, indices = tree.query(floodfill_indices_columns_swapped)
 
-    x_coords, y_coords = np.hsplit(transposed, 2)
+    x_coords, y_coords = np.hsplit(floodfill_indices_columns_swapped, 2)
     x_coords = x_coords.flatten()
     y_coords = y_coords.flatten()
 
     # Update result_mask using advanced indexing
-    result_mask[y_coords, x_coords] = inside_fill_area_points_with_colors[indices, 2:]
+    result_mask[y_coords, x_coords] = center_points_with_colors_within_fill[indices, 2:]
 
     return result_mask

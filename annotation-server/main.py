@@ -8,6 +8,7 @@ import torch
 import uvicorn
 from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import StreamingResponse
+from fastapi.staticfiles import StaticFiles
 from merge_masks import merge_masks
 from PIL import Image
 from pydantic import BaseModel
@@ -24,6 +25,10 @@ predictor = SamPredictor(sam)
 
 
 app = FastAPI()
+
+app.mount(
+    "/interface", StaticFiles(directory="../annotation-interface/dist"), name="static"
+)
 
 
 class State:
