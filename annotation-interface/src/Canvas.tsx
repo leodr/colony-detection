@@ -14,12 +14,10 @@ import {
   useState,
 } from "react";
 import { useDispatch, useSelector } from "react-redux";
+// @ts-expect-error: No types are available
 import { tinykeys } from "tinykeys";
 import { removeSelectedImage, selectPreviousImage } from "./images-slice";
-import { mergeMaskImagesToImageElement } from "./merge-mask-images";
 import { RootState } from "./store";
-import { useStack } from "./use-stack";
-import { Coordinates, getImageCoordinates } from "./util/image-coordinates";
 
 export function Canvas() {
   const dispatch = useDispatch();
@@ -40,35 +38,60 @@ export function Canvas() {
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  const {
-    top: mask,
-    clear: clearMasks,
-    push: pushMask,
-    pop: popMask,
-  } = useStack<HTMLImageElement>(5);
+  const [mask, setMask] = useState<HTMLImageElement | null>(null);
   const [image, setImage] = useState<HTMLImageElement | null>(null);
 
   const [showMask, setShowMask] = useState(true);
   const [counter, setCounter] = useState(0);
 
-  const {
-    clear: clearClicks,
-    pop: popClick,
-    push: pushClick,
-    stack: clickStack,
-  } = useStack<Coordinates>(Infinity);
-
   const undo = useCallback(() => {
-    popMask();
-    popClick();
-    setCounter((counter) => Math.max(counter - 1, 0));
-  }, [popClick, popMask]);
+    fetch("http://localhost:8000/undo", { method: "POST" })
+      .then((response) => response.blob())
+      .then((blob) => {
+        const img = new Image();
+        img.onload = () => {
+          setMask(img);
+        };
+        img.src = URL.createObjectURL(blob);
+      });
+  }, []);
 
   const clear = useCallback(() => {
-    clearMasks();
-    clearClicks();
-    setCounter(0);
-  }, [clearClicks, clearMasks]);
+    fetch("http://localhost:8000/clear-mask", { method: "POST" })
+      .then((response) => response.blob())
+      .then((blob) => {
+        const img = new Image();
+        img.onload = () => {
+          setMask(img);
+        };
+        img.src = URL.createObjectURL(blob);
+      });
+  }, []);
+
+  useEffect(() => {
+    if (mask) {
+      fetch("http://localhost:8000/click-count")
+        .then((response) => response.text())
+        .then((text) => setCounter(Number(text)));
+    } else {
+      setCounter(0);
+    }
+  }, [mask]);
+
+  const handleDownloadAndNext = useCallback(() => {
+    if (image && selectedImage && mask) {
+      const link = document.createElement("a");
+
+      link.download =
+        images[selectedImage]?.filename.split(".").slice(0, -1).join(".") +
+        `_mask_${counter}.png`;
+      link.href = mask.src;
+
+      link.click();
+    }
+
+    dispatch(removeSelectedImage());
+  }, [counter, dispatch, image, images, mask, selectedImage]);
 
   useEffect(() => {
     const unsubscribe = tinykeys(window, {
@@ -171,16 +194,12 @@ export function Canvas() {
     }
   }, [image, mask, showMask]);
 
-  function handleCanvasClick(e: MouseEvent<HTMLCanvasElement>) {
+  function handleMaskClick(e: MouseEvent<HTMLImageElement>) {
     if (image != null && imageSetState === "idle") {
-      if (!e.altKey) {
-        setCounter((counter) => counter + 1);
-      }
-
       const relativeX = e.nativeEvent.offsetX;
       const relativeY = e.nativeEvent.offsetY;
 
-      const target = e.target as HTMLCanvasElement;
+      const target = e.target as HTMLImageElement;
 
       // Calculate screen size of canvas
       const canvasWidth = target.clientWidth;
@@ -204,60 +223,31 @@ export function Canvas() {
         .then((blob) => {
           const img = new Image();
           img.onload = () => {
-            pushMask(img);
+            setMask(img);
           };
           img.src = URL.createObjectURL(blob);
         });
     }
   }
 
-  function handleDownloadAndNext() {
-    if (image && selectedImage) {
-      const canvas = document.createElement("canvas");
-      canvas.width = image.width;
-      canvas.height = image.height;
-
-      const ctx = canvas.getContext("2d")!;
-      ctx.fillStyle = "#000000";
-      ctx.fillRect(0, 0, image.width, image.height);
-      if (mask) {
-        ctx.drawImage(mask, 0, 0, mask.width, mask.height);
-      }
-
-      fetch("http://localhost:8000/colorize-from-coordinates", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          coordinates: clickStack.map((e) => [e.x, e.y]),
-          base64_image: canvas.toDataURL("image/png"),
-        }),
-      });
-
-      // const link = document.createElement("a");
-
-      // link.download =
-      //   images[selectedImage]?.filename.split(".").slice(0, -1).join(".") +
-      //   `_mask_${counter}.png`;
-      // link.href = canvas.toDataURL("image/png");
-
-      // link.click();
-    }
-
-    dispatch(removeSelectedImage());
-  }
-
   return (
     <main className="flex flex-1 items-center justify-center relative">
       <div className="relative">
-        <canvas
-          className={`rounded border border-gray-500 w-[800px] h-[800px] graph ${
+        <div
+          className={`rounded border-2 border-gray-700 w-[800px] h-[800px] graph ${
             imageSetState === "loading" ? "animate-pulse grayscale" : ""
           }`}
-          ref={canvasRef}
-          width={image?.width ?? 800}
-          height={image?.height ?? 800}
-          onClick={handleCanvasClick}
-        />
+        >
+          {selectedImageUrl ? <img src={selectedImageUrl} /> : null}
+          {mask && showMask ? (
+            <img
+              src={mask.src}
+              alt=""
+              className="absolute top-0 left-0 w-full h-full opacity-50"
+              onClick={handleMaskClick}
+            />
+          ) : null}
+        </div>
         <button
           type="button"
           className="absolute top-100 mt-2 left-1/2 transform -translate-x-1/2 inline-flex items-center gap-x-2 rounded-sm px-3 py-1.5 text-sm text-gray-200 shadow-sm hover:bg-white/10 border border-gray-700"
@@ -287,7 +277,7 @@ export function Canvas() {
           </div>
         </button>
       </div>
-      <div className="flex whitespace-nowrap gap-2 items-center shadow absolute text-white bottom-0 left-1/2 transform -translate-x-1/2 bg-gray-800 p-2 border-2 border-gray-500 rounded-lg">
+      <div className="flex whitespace-nowrap gap-2 items-center shadow absolute text-white bottom-0 left-1/2 transform -translate-x-1/2 bg-gray-900 p-2 border-2 border-gray-700 rounded-lg">
         <button
           type="button"
           className="inline-flex items-center gap-x-2 rounded-md bg-white/10 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-white/20"
@@ -344,4 +334,31 @@ export function Canvas() {
       </div>
     </main>
   );
+}
+
+export type Coordinates = {
+  x: number;
+  y: number;
+};
+
+export type Size = {
+  width: number;
+  height: number;
+};
+
+/**
+ * Convert coordinates from the canvas to coordinates in the image
+ */
+function getImageCoordinates(
+  canvasCoordinates: Coordinates,
+  canvasSize: Size,
+  imageSize: Size
+): Coordinates {
+  const x = Math.round(
+    (canvasCoordinates.x / canvasSize.width) * imageSize.width
+  );
+  const y = Math.round(
+    (canvasCoordinates.y / canvasSize.height) * imageSize.height
+  );
+  return { x, y };
 }

@@ -51,7 +51,7 @@ export function ImageDropArea() {
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      className="h-full flex flex-col rounded-lg bg-gray-800 border-2 border-gray-500 p-2"
+      className="h-full flex flex-col rounded-lg bg-gray-900 border-2 border-gray-700 p-2"
       style={{ borderColor: dragging ? "white" : undefined }}
     >
       {imageIds.map((id) => {
