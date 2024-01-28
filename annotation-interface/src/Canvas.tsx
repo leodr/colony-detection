@@ -5,14 +5,7 @@ import {
   EyeSlashIcon,
   TrashIcon,
 } from "@heroicons/react/20/solid";
-import {
-  MouseEvent,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { MouseEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 // @ts-expect-error: No types are available
 import { tinykeys } from "tinykeys";
@@ -35,8 +28,6 @@ export function Canvas() {
 
     return images[selectedImage]?.url;
   }, [images, selectedImage]);
-
-  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const [mask, setMask] = useState<HTMLImageElement | null>(null);
   const [image, setImage] = useState<HTMLImageElement | null>(null);
@@ -157,42 +148,6 @@ export function Canvas() {
         });
     }
   }, [selectedImageUrl]);
-
-  useEffect(() => {
-    if (canvasRef.current) {
-      const ctx = canvasRef.current.getContext("2d")!;
-      const canvasWidth = canvasRef.current.width;
-      const canvasHeight = canvasRef.current.height;
-
-      if (image) {
-        ctx.drawImage(image, 0, 0, canvasWidth, canvasHeight);
-
-        if (mask && showMask) {
-          const canvas = document.createElement("canvas");
-          const ctx2 = canvas.getContext("2d")!;
-
-          canvas.width = canvasWidth;
-          canvas.height = canvasHeight;
-
-          ctx2.drawImage(mask, 0, 0, canvasWidth, canvasHeight);
-          const imageData = ctx2.getImageData(0, 0, canvasWidth, canvasHeight);
-
-          for (let i = 0; i < imageData.data.length; i += 4) {
-            // mergedData.data[i] = 255; // Red
-            // mergedData.data[i + 1] = 255; // Green
-            // mergedData.data[i + 2] = 255; // Blue
-            imageData.data[i + 3] = 128; // Alpha
-          }
-
-          ctx2.putImageData(imageData, 0, 0);
-
-          ctx.drawImage(canvas, 0, 0, canvasWidth, canvasHeight);
-        }
-      } else {
-        ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-      }
-    }
-  }, [image, mask, showMask]);
 
   function handleMaskClick(e: MouseEvent<HTMLImageElement>) {
     if (image != null && imageSetState === "idle") {
