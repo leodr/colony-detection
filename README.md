@@ -17,6 +17,12 @@ is web-based.
 
 <br>
 
+## Screenshots
+
+![Screenshot of annotation app](./screenshot.png)
+
+<br>
+
 ## Setup for Annotation Server
 
 1. **Requirements**
