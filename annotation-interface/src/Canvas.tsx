@@ -42,7 +42,7 @@ export function Canvas() {
   const [showMask, setShowMask] = useState(true);
   const [counter, setCounter] = useState(0);
 
-  const [quadrant, setQuadrant] = useState<Quadrant>("top-right");
+  const [quadrant, setQuadrant] = useState<Quadrant>("all");
 
   const undo = useCallback(() => {
     fetch("http://localhost:8000/undo", { method: "POST" })
