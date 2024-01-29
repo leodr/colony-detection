@@ -12,6 +12,13 @@ import { tinykeys } from "tinykeys";
 import { removeSelectedImage, selectPreviousImage } from "./images-slice";
 import { RootState } from "./store";
 
+type Quadrant =
+  | "top-left"
+  | "top-right"
+  | "bottom-left"
+  | "bottom-right"
+  | "all";
+
 export function Canvas() {
   const dispatch = useDispatch();
   const selectedImage = useSelector(
@@ -34,6 +41,8 @@ export function Canvas() {
 
   const [showMask, setShowMask] = useState(true);
   const [counter, setCounter] = useState(0);
+
+  const [quadrant, setQuadrant] = useState<Quadrant>("top-right");
 
   const undo = useCallback(() => {
     fetch("http://localhost:8000/undo", { method: "POST" })
@@ -185,52 +194,129 @@ export function Canvas() {
     }
   }
 
+  const positioningClasses = ["max-w-[unset] absolute"];
+
+  switch (quadrant) {
+    case "top-left":
+      positioningClasses.push("w-[200%] h-[200%] top-0 left-0");
+      break;
+    case "top-right":
+      positioningClasses.push("w-[200%] h-[200%] top-0 -left-full");
+      break;
+    case "bottom-left":
+      positioningClasses.push("w-[200%] h-[200%] -top-full left-0");
+      break;
+    case "bottom-right":
+      positioningClasses.push("w-[200%] h-[200%] -top-full -left-full");
+      break;
+    case "all":
+      positioningClasses.push("w-full h-full top-0 left-0");
+      break;
+  }
+
+  const positioningClassesString = positioningClasses.join(" ");
+
   return (
     <main className="flex flex-1 items-center justify-center relative">
       <div className="relative">
         <div
-          className={`rounded border-2 border-gray-700 w-[800px] h-[800px] graph ${
+          className={`relative rounded border-2 border-gray-700 w-[800px] h-[800px] graph overflow-hidden ${
             imageSetState === "loading" ? "animate-pulse grayscale" : ""
           }`}
         >
-          {selectedImageUrl ? <img src={selectedImageUrl} /> : null}
+          {selectedImageUrl ? (
+            <img src={selectedImageUrl} className={positioningClassesString} />
+          ) : null}
           {mask && showMask ? (
             <img
               src={mask.src}
               alt=""
-              className="absolute top-0 left-0 w-full h-full opacity-50"
+              className={positioningClassesString + " opacity-50"}
               onClick={handleMaskClick}
             />
           ) : null}
         </div>
-        <button
-          type="button"
-          className="absolute top-100 mt-2 left-1/2 transform -translate-x-1/2 inline-flex items-center gap-x-2 rounded-sm px-3 py-1.5 text-sm text-gray-200 shadow-sm hover:bg-white/10 border border-gray-700"
-          onClick={() => {
-            setShowMask((curr) => !curr);
-          }}
-        >
-          <EyeSlashIcon
-            className="-ml-0.5 h-4 w-4 text-gray-500"
-            aria-hidden="true"
-          />
-          <div className="grid">
-            <span
-              className="col-start-1 col-span-1 row-start-1 row-span-1"
-              aria-hidden={showMask}
-              style={{ visibility: !showMask ? "hidden" : "visible" }}
+        <div className="absolute top-100 mt-2 left-1/2 transform -translate-x-1/2 flex gap-x-2">
+          <button
+            type="button"
+            className="inline-flex items-center gap-x-2 rounded-sm px-3 py-1.5 text-sm text-gray-200 shadow-sm hover:bg-white/10 border border-gray-700"
+            onClick={() => {
+              setShowMask((curr) => !curr);
+            }}
+          >
+            <EyeSlashIcon
+              className="-ml-0.5 h-4 w-4 text-gray-500"
+              aria-hidden="true"
+            />
+            <div className="grid">
+              <span
+                className="col-start-1 col-span-1 row-start-1 row-span-1"
+                aria-hidden={showMask}
+                style={{ visibility: !showMask ? "hidden" : "visible" }}
+              >
+                Hide mask
+              </span>
+              <span
+                className="col-start-1 col-span-1 row-start-1 row-span-1"
+                aria-hidden={!showMask}
+                style={{ visibility: showMask ? "hidden" : "visible" }}
+              >
+                Show mask
+              </span>
+            </div>
+          </button>
+          <div className="flex items-center gap-x-1 rounded-sm px-2 py-1 text-sm shadow-sm border border-gray-700">
+            <button
+              onClick={() => setQuadrant("all")}
+              className={
+                "p-1 rounded " +
+                (quadrant === "all" ? "bg-white/20" : "hover:bg-white/10")
+              }
             >
-              Hide mask
-            </span>
-            <span
-              className="col-start-1 col-span-1 row-start-1 row-span-1"
-              aria-hidden={!showMask}
-              style={{ visibility: showMask ? "hidden" : "visible" }}
+              <div className="rounded-full w-4 h-4 bg-gray-500"></div>
+            </button>
+            <button
+              onClick={() => setQuadrant("top-left")}
+              className={
+                "p-1 rounded " +
+                (quadrant === "top-left" ? "bg-white/20" : "hover:bg-white/10")
+              }
             >
-              Show mask
-            </span>
+              <div className="rounded-tl-full w-4 h-4 bg-gray-500"></div>
+            </button>
+            <button
+              onClick={() => setQuadrant("top-right")}
+              className={
+                "p-1 rounded " +
+                (quadrant === "top-right" ? "bg-white/20" : "hover:bg-white/10")
+              }
+            >
+              <div className="rounded-tr-full w-4 h-4 bg-gray-500"></div>
+            </button>
+            <button
+              onClick={() => setQuadrant("bottom-left")}
+              className={
+                "p-1 rounded " +
+                (quadrant === "bottom-left"
+                  ? "bg-white/20"
+                  : "hover:bg-white/10")
+              }
+            >
+              <div className="rounded-bl-full w-4 h-4 bg-gray-500"></div>
+            </button>
+            <button
+              onClick={() => setQuadrant("bottom-right")}
+              className={
+                "p-1 rounded " +
+                (quadrant === "bottom-right"
+                  ? "bg-white/20"
+                  : "hover:bg-white/10")
+              }
+            >
+              <div className="rounded-br-full w-4 h-4 bg-gray-500"></div>
+            </button>
           </div>
-        </button>
+        </div>
       </div>
       <div className="flex whitespace-nowrap gap-2 items-center shadow absolute text-white bottom-0 left-1/2 transform -translate-x-1/2 bg-gray-900 p-2 border-2 border-gray-700 rounded-lg">
         <button
