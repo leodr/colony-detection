@@ -231,7 +231,7 @@ export function Canvas() {
             <img
               src={mask.src}
               alt=""
-              className={positioningClassesString + " opacity-50"}
+              className={positioningClassesString + " opacity-50 transform-gpu"}
               onClick={handleMaskClick}
             />
           ) : null}
