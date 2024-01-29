@@ -7,6 +7,7 @@ import numpy as np
 import torch
 import uvicorn
 from fastapi import FastAPI, File, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from merge_masks import merge_masks
@@ -25,6 +26,14 @@ predictor = SamPredictor(sam)
 
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 app.mount(
     "/interface", StaticFiles(directory="../annotation-interface/dist"), name="static"
