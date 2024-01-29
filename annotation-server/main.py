@@ -14,7 +14,7 @@ from PIL import Image
 from pydantic import BaseModel
 from segment_anything import SamPredictor, sam_model_registry
 
-sam = sam_model_registry["vit_h"](checkpoint="sam_vit_h_4b8939.pth")
+sam = sam_model_registry["vit_h"](checkpoint="sam_vit_h.pth")
 
 if torch.backends.mps.is_available():
     sam.to(device="mps")

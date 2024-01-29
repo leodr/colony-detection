@@ -1,0 +1,10 @@
+numpy
+torch
+uvicorn
+fastapi
+pillow
+pydantic
+git+https://github.com/facebookresearch/segment-anything.git#segment_anything
+opencv-python
+scipy
+python-multipart
