@@ -34,7 +34,7 @@ COPY requirements.txt /app
 RUN pip install -r requirements.txt
 
 # Copy the built interface files
-COPY --from=interface-builder /app/dist ./public
+COPY --from=interface-builder /app/dist ./interface/dist
 
 # Copy the Python server
 COPY . .

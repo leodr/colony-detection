@@ -1,6 +1,8 @@
 import io
 import logging
+import os
 import shutil
+import uuid
 from typing import List, Tuple
 
 import numpy as np
@@ -8,21 +10,34 @@ import torch
 import uvicorn
 from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
+from limited_map import LimitedMap
 from merge_masks import merge_masks
 from PIL import Image
 from pydantic import BaseModel
 from segment_anything import SamPredictor, sam_model_registry
+from uvicorn.config import LOGGING_CONFIG
 
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(name)s] %(levelname)s:    %(message)s",
+)
+logger = logging.getLogger(__name__)
+
+logging.info(f"Loading SAM model.")
 sam = sam_model_registry["vit_h"](checkpoint="sam_vit_h.pth")
+logging.info(f"Loaded SAM model.")
 
 if torch.backends.mps.is_available():
     sam.to(device="mps")
+    logging.info(f"Using MPS for SAM.")
 elif torch.cuda.is_available():
     sam.to(device="cuda")
-
-predictor = SamPredictor(sam)
+    logging.info(f"Using CUDA for SAM.")
+else:
+    logging.info(f"Using CPU for SAM.")
 
 
 app = FastAPI()
@@ -34,20 +49,35 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+if os.path.exists("./interface/dist"):
+    app.mount("/static", StaticFiles(directory="./interface/dist"), name="static")
 
-app.mount("/interface", StaticFiles(directory="./public"), name="static")
+    # Custom route to serve `index.html` at root ("/") and "/index.html"
+    @app.get("/")
+    @app.get("/index.html")
+    async def root():
+        return FileResponse("./interface/dist/index.html")
+
+    logging.info(f"Serving static files from './interface/dist'.")
+else:
+    logging.info(f"Could not find './interface/dist'. Not serving static files.")
 
 
-class State:
-    """Stores the state of the app for a certain image."""
+class ImageState:
+    """Stores the state for a certain image."""
 
-    image: np.ndarray
+    image_shape: Tuple[int, int]
+    predictor: SamPredictor
     masks_stack: List[np.ndarray]
     clicks: List[Tuple[int, int]]
 
     def __init__(self, image: np.ndarray):
-        self.image = image
-        self.masks_stack = [np.zeros_like(image)]
+        self.image_shape = image.shape[:2]
+
+        self.predictor = SamPredictor(sam)
+        self.predictor.set_image(image)
+
+        self.masks_stack = [np.zeros(self.image_shape)]
         self.clicks = []
 
     @property
@@ -58,20 +88,51 @@ class State:
         if len(self.masks_stack) > 1:
             self.masks_stack.pop()
         else:
-            self.masks_stack = [np.zeros_like(self.image)]
+            self.masks_stack = [np.zeros(self.image_shape)]
 
         if len(self.clicks) > 0:
             self.clicks.pop()
 
     def clear_mask(self):
-        self.masks_stack = [np.zeros_like(self.image)]
+        self.masks_stack = [np.zeros(self.image_shape)]
         self.clicks = []
 
 
-state: State = None
+# Global state, holds the current image state for up to 20 images.
+state_map = LimitedMap(20)
 
 
-def image_array_to_response(image_array: np.ndarray):
+def get_image_state(image_id: str) -> ImageState:
+    """Returns the image state for the given image ID.
+
+    Args:
+        image_id (str): The ID of the image to get the state for.
+
+    Raises:
+        ValueError: If the image with the given ID is not found.
+
+    Returns:
+        ImageState: The image state for the given image ID.
+    """
+    global state_map
+
+    state = state_map[image_id]
+
+    if state is None:
+        raise ValueError(f"Image with ID {image_id} not found.")
+
+    return state
+
+
+def image_array_to_response(image_array: np.ndarray) -> StreamingResponse:
+    """Prepares a numpy array for streaming as an image.
+
+    Args:
+        image_array (np.ndarray): The image as a numpy array.
+
+    Returns:
+        StreamingResponse: The image as a PNG streaming response.
+    """
     image = Image.fromarray(image_array)
     buffered = io.BytesIO()
     image.save(buffered, format="PNG")
@@ -81,10 +142,18 @@ def image_array_to_response(image_array: np.ndarray):
     return StreamingResponse(io.BytesIO(img_byte_array), media_type="image/png")
 
 
-@app.put("/set-image")
-def set_image(file: UploadFile = File(...)):
-    """Sets the image to segment."""
-    global state
+@app.post("/images")
+def set_image(file: UploadFile = File(...)) -> str:
+    """Uploads an image and returns an ID to reference it. The image has to be
+    supplied as a form-data file.
+
+    Args:
+        file (UploadFile, optional): The image to upload.
+
+    Returns:
+        str: The ID of the uploaded image.
+    """
+    global state_map
 
     with io.BytesIO() as buffer:
         shutil.copyfileobj(file.file, buffer)
@@ -92,11 +161,17 @@ def set_image(file: UploadFile = File(...)):
 
         image_array = np.array(Image.open(buffer))
 
-        state = State(image=image_array)
+    logging.info(f"Received image with shape {image_array.shape}.")
 
-        predictor.set_image(image_array)
+    state = ImageState(image=image_array)
 
-        return image_array_to_response(state.current_mask)
+    id = str(uuid.uuid4())
+
+    logging.info(f"Registered image with ID {id}.")
+
+    state_map[id] = state
+
+    return id
 
 
 class ClickData(BaseModel):
@@ -104,14 +179,25 @@ class ClickData(BaseModel):
     y: int
 
 
-@app.post("/register-click")
-def register_click(click_data: ClickData):
-    """Returns the new mask image after registering a click."""
-    global state
+@app.post("/images/{image_id}/clicks")
+def register_click(image_id: str, click_data: ClickData) -> StreamingResponse:
+    """Registers a click on the image with the given ID and returns the new mask.
+
+    Args:
+        image_id (str): The ID of the image to register the click on.
+        click_data (ClickData): The coordinates of the click.
+
+    Raises:
+        ValueError: If the image with the given ID is not found.
+
+    Returns:
+        StreamingResponse: The new mask as a PNG image.
+    """
+    state = get_image_state(image_id)
 
     state.clicks.append((click_data.x, click_data.y))
 
-    masks, _, _ = predictor.predict(
+    masks, _, _ = state.predictor.predict(
         point_coords=np.array([[click_data.x, click_data.y]]),
         point_labels=np.array([1]),
     )
@@ -127,35 +213,83 @@ def register_click(click_data: ClickData):
     return image_array_to_response(state.current_mask)
 
 
-@app.get("/click-count")
-def click_count():
-    """Returns the number of clicks registered."""
-    global state
+@app.get("images/{image_id}/click-count")
+def click_count(image_id: str) -> int:
+    """Returns the number of clicks on the image with the given ID.
+
+    Args:
+        image_id (str): The ID of the image to get the click count for.
+
+    Raises:
+        ValueError: If the image with the given ID is not found.
+
+    Returns:
+        int: The number of clicks on the image.
+    """
+    state = get_image_state(image_id)
 
     return len(state.clicks)
 
 
-@app.post("/undo")
-def undo():
-    """Returns the new mask image after undoing the last click."""
-    global state
+@app.post("images/{image_id}/undo")
+def undo(image_id: str) -> StreamingResponse:
+    """Undoes the last click on the image with the given ID and returns the new (old) mask.
+
+    Args:
+        image_id (str): The ID of the image to undo the last click on.
+
+    Raises:
+        ValueError: If the image with the given ID is not found.
+
+    Returns:
+        StreamingResponse: The new (old) mask as a PNG image.
+    """
+    state = get_image_state(image_id)
 
     state.undo()
 
     return image_array_to_response(state.current_mask)
 
 
-@app.post("/clear-mask")
-def clear_mask():
-    """Returns the new mask image after clearing the mask."""
-    global state
+@app.post("/images/{image_id}/clear-mask")
+def clear_mask(image_id: str) -> StreamingResponse:
+    """Clears the mask for the image with the given ID and returns a clear mask.
+
+    Args:
+        image_id (str): The ID of the image to clear the mask for.
+
+    Raises:
+        ValueError: If the image with the given ID is not found.
+
+    Returns:
+        StreamingResponse: The clear mask as a PNG image.
+    """
+    state = get_image_state(image_id)
 
     state.clear_mask()
 
     return image_array_to_response(state.current_mask)
 
 
+@app.delete("/images/{image_id}")
+def delete_image(image_id: str) -> None:
+    """Deletes the image with the given ID.
+
+    Args:
+        image_id (str): The ID of the image to delete.
+    """
+    global state_map
+
+    del state_map[image_id]
+
+
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
+    # Add timestamp to logs
+    LOGGING_CONFIG["formatters"]["default"][
+        "fmt"
+    ] = "%(asctime)s [%(name)s] %(levelprefix)s %(message)s"
+    LOGGING_CONFIG["formatters"]["access"][
+        "fmt"
+    ] = '%(asctime)s [%(name)s] %(levelprefix)s %(client_addr)s - "%(request_line)s" %(status_code)s'
 
     uvicorn.run(app, port=80, host="0.0.0.0", log_level="info")
