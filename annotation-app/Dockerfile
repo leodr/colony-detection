@@ -1,45 +1,44 @@
 # First Stage: Build the annotation interface
-FROM node:20 as build-interface
+FROM node:20 as interface-builder
 
 WORKDIR /app
 
 # Copy package.json and package-lock.json (if available) first
-COPY annotation-interface/package*.json /app/
+COPY interface/package*.json /app/
 RUN npm install
 
 # Now copy the rest of the files
-COPY annotation-interface /app
+COPY interface /app
 RUN npm run build-under-base
 
 # Second Stage: Setup and Run the Python server
-FROM pytorch/pytorch:2.1.2-cuda12.1-cudnn8-runtime
+FROM pytorch/pytorch:2.1.2-cuda12.1-cudnn8-runtime as main
 
-# Set environment variables
+# Set environment variables (important for avoiding opencv installation prompts)
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Install system dependencies
 RUN apt-get update && \
   apt-get install -y \
-  tree \
   curl \
   git \
   python3-opencv
 
 WORKDIR /app
 
-# Copying the built interface files
-COPY --from=build-interface /app/dist /app/public
-
-# Copying the Python server
-COPY annotation-server /app/
-
+# Download the SAM model file
 RUN curl -o sam_vit_h.pth https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth
 
-# Install Python dependencies
+# Copy requirements.txt and install Python dependencies
 COPY requirements.txt /app
-
 RUN pip install -r requirements.txt
 
-EXPOSE 1734
+# Copy the built interface files
+COPY --from=interface-builder /app/dist ./public
 
-CMD tree && python3 /app/main.py
+# Copy the Python server
+COPY . .
+
+EXPOSE 80
+
+CMD ["python3", "main.py"] 

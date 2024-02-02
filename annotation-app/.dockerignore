@@ -1,0 +1,9 @@
+# Python app
+sam_vit_h.pth
+__pycache__/
+
+# Interface
+interface/dist/
+interface/node_modules/
+interface/.eslintrc.cjs
+interface/README.md
