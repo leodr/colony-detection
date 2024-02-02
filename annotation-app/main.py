@@ -174,6 +174,24 @@ def set_image(file: UploadFile = File(...)) -> str:
     return id
 
 
+@app.get("/images/{image_id}/mask")
+def get_mask(image_id: str) -> StreamingResponse:
+    """Returns the current mask for the image with the given ID.
+
+    Args:
+        image_id (str): The ID of the image to get the mask for.
+
+    Raises:
+        ValueError: If the image with the given ID is not found.
+
+    Returns:
+        StreamingResponse: The current mask as a PNG image.
+    """
+    state = get_image_state(image_id)
+
+    return image_array_to_response(state.current_mask)
+
+
 class ClickData(BaseModel):
     x: int
     y: int
