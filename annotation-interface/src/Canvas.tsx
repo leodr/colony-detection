@@ -45,7 +45,7 @@ export function Canvas() {
   const [quadrant, setQuadrant] = useState<Quadrant>("all");
 
   const undo = useCallback(() => {
-    fetch("http://localhost:8000/undo", { method: "POST" })
+    fetch("/undo", { method: "POST" })
       .then((response) => response.blob())
       .then((blob) => {
         const img = new Image();
@@ -57,7 +57,7 @@ export function Canvas() {
   }, []);
 
   const clear = useCallback(() => {
-    fetch("http://localhost:8000/clear-mask", { method: "POST" })
+    fetch("/clear-mask", { method: "POST" })
       .then((response) => response.blob())
       .then((blob) => {
         const img = new Image();
@@ -70,7 +70,7 @@ export function Canvas() {
 
   useEffect(() => {
     if (mask) {
-      fetch("http://localhost:8000/click-count")
+      fetch("/click-count")
         .then((response) => response.text())
         .then((text) => setCounter(Number(text)));
     } else {
@@ -150,7 +150,7 @@ export function Canvas() {
 
           formData.append("file", blob);
 
-          fetch("http://localhost:8000/set-image", {
+          fetch("/set-image", {
             method: "PUT",
             body: formData,
           }).finally(() => setImageSetState("idle"));
@@ -175,7 +175,7 @@ export function Canvas() {
         { width: image.width, height: image.height }
       );
 
-      fetch(`http://localhost:8000/register-click`, {
+      fetch(`/register-click`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

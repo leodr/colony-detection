@@ -35,9 +35,7 @@ app.add_middleware(
 )
 
 
-app.mount(
-    "/interface", StaticFiles(directory="../annotation-interface/dist"), name="static"
-)
+app.mount("/interface", StaticFiles(directory="./public"), name="static")
 
 
 class State:
@@ -160,4 +158,4 @@ def clear_mask():
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
 
-    uvicorn.run(app, port=8000, log_level="info")
+    uvicorn.run(app, port=1734, host="0.0.0.0", log_level="info")
