@@ -39,6 +39,6 @@ COPY --from=interface-builder /app/dist ./interface/dist
 # Copy the Python server
 COPY . .
 
-EXPOSE 1734
+EXPOSE 80
 
 CMD ["python3", "main.py"] 
