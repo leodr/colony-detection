@@ -39,13 +39,15 @@ export function Canvas() {
   const [mask, setMask] = useState<HTMLImageElement | null>(null);
   const [image, setImage] = useState<HTMLImageElement | null>(null);
 
+  const [imageId, setImageId] = useState<string | null>(null);
+
   const [showMask, setShowMask] = useState(true);
   const [counter, setCounter] = useState(0);
 
   const [quadrant, setQuadrant] = useState<Quadrant>("all");
 
   const undo = useCallback(() => {
-    fetch("/undo", { method: "POST" })
+    fetch(resolveUrl(`/images/${imageId}/undo`), { method: "POST" })
       .then((response) => response.blob())
       .then((blob) => {
         const img = new Image();
@@ -54,29 +56,31 @@ export function Canvas() {
         };
         img.src = URL.createObjectURL(blob);
       });
-  }, []);
+  }, [imageId]);
 
   const clear = useCallback(() => {
-    fetch("/clear-mask", { method: "POST" })
-      .then((response) => response.blob())
-      .then((blob) => {
-        const img = new Image();
-        img.onload = () => {
-          setMask(img);
-        };
-        img.src = URL.createObjectURL(blob);
-      });
-  }, []);
+    if (imageId) {
+      fetch(resolveUrl(`/images/${imageId}/clear-mask`), { method: "POST" })
+        .then((response) => response.blob())
+        .then((blob) => {
+          const img = new Image();
+          img.onload = () => {
+            setMask(img);
+          };
+          img.src = URL.createObjectURL(blob);
+        });
+    }
+  }, [imageId]);
 
   useEffect(() => {
     if (mask) {
-      fetch("/click-count")
-        .then((response) => response.text())
-        .then((text) => setCounter(Number(text)));
+      fetch(resolveUrl(`/images/${imageId}/click-count`))
+        .then((response) => response.json())
+        .then((text) => setCounter(text));
     } else {
       setCounter(0);
     }
-  }, [mask]);
+  }, [imageId, mask]);
 
   const handleDownloadAndNext = useCallback(() => {
     if (image && selectedImage && mask) {
@@ -150,11 +154,27 @@ export function Canvas() {
 
           formData.append("file", blob);
 
-          fetch("/set-image", {
-            method: "PUT",
+          return fetch(resolveUrl("/images"), {
+            method: "POST",
             body: formData,
-          }).finally(() => setImageSetState("idle"));
-        });
+          });
+        })
+        .then((response) => response.json())
+        .then((id) => {
+          setImageId(id);
+          setImageSetState("idle");
+
+          return fetch(resolveUrl(`/images/${id}/mask`));
+        })
+        .then((response) => response.blob())
+        .then((blob) => {
+          const img = new Image();
+          img.onload = () => {
+            setMask(img);
+          };
+          img.src = URL.createObjectURL(blob);
+        })
+        .catch(console.error);
     }
   }, [selectedImageUrl]);
 
@@ -175,7 +195,7 @@ export function Canvas() {
         { width: image.width, height: image.height }
       );
 
-      fetch(`/register-click`, {
+      fetch(resolveUrl(`/images/${imageId}/clicks`), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -217,10 +237,10 @@ export function Canvas() {
   const positioningClassesString = positioningClasses.join(" ");
 
   return (
-    <main className="flex flex-1 items-center justify-center relative">
+    <main className="relative flex flex-1 items-center justify-center">
       <div className="relative">
         <div
-          className={`relative rounded border-2 border-gray-700 w-[800px] h-[800px] graph overflow-hidden ${
+          className={`graph relative h-[800px] w-[800px] overflow-hidden rounded border-2 border-gray-700 ${
             imageSetState === "loading" ? "animate-pulse grayscale" : ""
           }`}
         >
@@ -231,15 +251,15 @@ export function Canvas() {
             <img
               src={mask.src}
               alt=""
-              className={positioningClassesString + " opacity-50 transform-gpu"}
+              className={positioningClassesString + " transform-gpu opacity-50"}
               onClick={handleMaskClick}
             />
           ) : null}
         </div>
-        <div className="absolute top-100 mt-2 left-1/2 transform -translate-x-1/2 flex gap-x-2">
+        <div className="top-100 absolute left-1/2 mt-2 flex -translate-x-1/2 transform gap-x-2">
           <button
             type="button"
-            className="inline-flex items-center gap-x-2 rounded-sm px-3 py-1.5 text-sm text-gray-200 shadow-sm hover:bg-white/10 border border-gray-700"
+            className="inline-flex items-center gap-x-2 rounded-sm border border-gray-700 px-3 py-1.5 text-sm text-gray-200 shadow-sm hover:bg-white/10"
             onClick={() => {
               setShowMask((curr) => !curr);
             }}
@@ -250,14 +270,14 @@ export function Canvas() {
             />
             <div className="grid">
               <span
-                className="col-start-1 col-span-1 row-start-1 row-span-1"
+                className="col-span-1 col-start-1 row-span-1 row-start-1"
                 aria-hidden={showMask}
                 style={{ visibility: !showMask ? "hidden" : "visible" }}
               >
                 Hide mask
               </span>
               <span
-                className="col-start-1 col-span-1 row-start-1 row-span-1"
+                className="col-span-1 col-start-1 row-span-1 row-start-1"
                 aria-hidden={!showMask}
                 style={{ visibility: showMask ? "hidden" : "visible" }}
               >
@@ -265,60 +285,60 @@ export function Canvas() {
               </span>
             </div>
           </button>
-          <div className="flex items-center gap-x-1 rounded-sm px-2 py-1 text-sm shadow-sm border border-gray-700">
+          <div className="flex items-center gap-x-1 rounded-sm border border-gray-700 px-2 py-1 text-sm shadow-sm">
             <button
               onClick={() => setQuadrant("all")}
               className={
-                "p-1 rounded " +
+                "rounded p-1 " +
                 (quadrant === "all" ? "bg-white/20" : "hover:bg-white/10")
               }
             >
-              <div className="rounded-full w-4 h-4 bg-gray-500"></div>
+              <div className="h-4 w-4 rounded-full bg-gray-500"></div>
             </button>
             <button
               onClick={() => setQuadrant("top-left")}
               className={
-                "p-1 rounded " +
+                "rounded p-1 " +
                 (quadrant === "top-left" ? "bg-white/20" : "hover:bg-white/10")
               }
             >
-              <div className="rounded-tl-full w-4 h-4 bg-gray-500"></div>
+              <div className="h-4 w-4 rounded-tl-full bg-gray-500"></div>
             </button>
             <button
               onClick={() => setQuadrant("top-right")}
               className={
-                "p-1 rounded " +
+                "rounded p-1 " +
                 (quadrant === "top-right" ? "bg-white/20" : "hover:bg-white/10")
               }
             >
-              <div className="rounded-tr-full w-4 h-4 bg-gray-500"></div>
+              <div className="h-4 w-4 rounded-tr-full bg-gray-500"></div>
             </button>
             <button
               onClick={() => setQuadrant("bottom-left")}
               className={
-                "p-1 rounded " +
+                "rounded p-1 " +
                 (quadrant === "bottom-left"
                   ? "bg-white/20"
                   : "hover:bg-white/10")
               }
             >
-              <div className="rounded-bl-full w-4 h-4 bg-gray-500"></div>
+              <div className="h-4 w-4 rounded-bl-full bg-gray-500"></div>
             </button>
             <button
               onClick={() => setQuadrant("bottom-right")}
               className={
-                "p-1 rounded " +
+                "rounded p-1 " +
                 (quadrant === "bottom-right"
                   ? "bg-white/20"
                   : "hover:bg-white/10")
               }
             >
-              <div className="rounded-br-full w-4 h-4 bg-gray-500"></div>
+              <div className="h-4 w-4 rounded-br-full bg-gray-500"></div>
             </button>
           </div>
         </div>
       </div>
-      <div className="flex whitespace-nowrap gap-2 items-center shadow absolute text-white bottom-0 left-1/2 transform -translate-x-1/2 bg-gray-900 p-2 border-2 border-gray-700 rounded-lg">
+      <div className="absolute bottom-0 left-1/2 flex -translate-x-1/2 transform items-center gap-2 whitespace-nowrap rounded-lg border-2 border-gray-700 bg-gray-900 p-2 text-white shadow">
         <button
           type="button"
           className="inline-flex items-center gap-x-2 rounded-md bg-white/10 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-white/20"
@@ -343,10 +363,10 @@ export function Canvas() {
         </button>
         <div className="flex px-4">
           <div className="flex flex-col items-center gap-1">
-            <span className="text-lg text-center leading-none">
+            <span className="text-center text-lg leading-none">
               {new Intl.NumberFormat().format(counter)}
             </span>
-            <span className="text-sm text-gray-500 leading-none">counted</span>
+            <span className="text-sm leading-none text-gray-500">counted</span>
           </div>
         </div>
         <button
@@ -402,4 +422,8 @@ function getImageCoordinates(
     (canvasCoordinates.y / canvasSize.height) * imageSize.height
   );
   return { x, y };
+}
+
+function resolveUrl(url: string) {
+  return import.meta.env.DEV ? `http://localhost:8000${url}` : url;
 }

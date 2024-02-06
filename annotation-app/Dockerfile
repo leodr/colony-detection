@@ -16,6 +16,7 @@ FROM pytorch/pytorch:2.1.2-cuda12.1-cudnn8-runtime as main
 
 # Set environment variables (important for avoiding opencv installation prompts)
 ENV DEBIAN_FRONTEND=noninteractive
+ENV IS_DOCKER_CONTAINER=1
 
 # Install system dependencies
 RUN apt-get update && \

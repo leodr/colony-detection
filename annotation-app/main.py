@@ -8,7 +8,7 @@ from typing import List, Tuple
 import numpy as np
 import torch
 import uvicorn
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
@@ -72,12 +72,13 @@ class ImageState:
     clicks: List[Tuple[int, int]]
 
     def __init__(self, image: np.ndarray):
-        self.image_shape = image.shape[:2]
+        self.image_shape = image.shape
 
         self.predictor = SamPredictor(sam)
         self.predictor.set_image(image)
 
-        self.masks_stack = [np.zeros(self.image_shape)]
+        self.masks_stack = [np.zeros(self.image_shape, dtype=np.uint8)]
+        logging.info(f"Initial mask shape: {self.masks_stack[-1].shape}.")
         self.clicks = []
 
     @property
@@ -88,13 +89,13 @@ class ImageState:
         if len(self.masks_stack) > 1:
             self.masks_stack.pop()
         else:
-            self.masks_stack = [np.zeros(self.image_shape)]
+            self.masks_stack = [np.zeros(self.image_shape, dtype=np.uint8)]
 
         if len(self.clicks) > 0:
             self.clicks.pop()
 
     def clear_mask(self):
-        self.masks_stack = [np.zeros(self.image_shape)]
+        self.masks_stack = [np.zeros(self.image_shape, dtype=np.uint8)]
         self.clicks = []
 
 
@@ -116,12 +117,12 @@ def get_image_state(image_id: str) -> ImageState:
     """
     global state_map
 
-    state = state_map[image_id]
-
-    if state is None:
-        raise ValueError(f"Image with ID {image_id} not found.")
-
-    return state
+    if image_id in state_map:
+        return state_map[image_id]
+    else:
+        raise HTTPException(
+            status_code=400, detail=f"Image with ID {image_id} not found."
+        )
 
 
 def image_array_to_response(image_array: np.ndarray) -> StreamingResponse:
@@ -231,7 +232,7 @@ def register_click(image_id: str, click_data: ClickData) -> StreamingResponse:
     return image_array_to_response(state.current_mask)
 
 
-@app.get("images/{image_id}/click-count")
+@app.get("/images/{image_id}/click-count")
 def click_count(image_id: str) -> int:
     """Returns the number of clicks on the image with the given ID.
 
@@ -249,7 +250,7 @@ def click_count(image_id: str) -> int:
     return len(state.clicks)
 
 
-@app.post("images/{image_id}/undo")
+@app.post("/images/{image_id}/undo")
 def undo(image_id: str) -> StreamingResponse:
     """Undoes the last click on the image with the given ID and returns the new (old) mask.
 
@@ -310,4 +311,9 @@ if __name__ == "__main__":
         "fmt"
     ] = '%(asctime)s [%(name)s] %(levelprefix)s %(client_addr)s - "%(request_line)s" %(status_code)s'
 
-    uvicorn.run(app, port=80, host="0.0.0.0", log_level="info")
+    uvicorn.run(
+        app,
+        port=80 if os.getenv("IS_DOCKER_CONTAINER") else 8000,
+        host="0.0.0.0" if os.getenv("IS_DOCKER_CONTAINER") else "127.0.0.1",
+        log_level="info",
+    )
