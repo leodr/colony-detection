@@ -30,14 +30,14 @@ logging.info(f"Loading SAM model.")
 sam = sam_model_registry["vit_h"](checkpoint="sam_vit_h.pth")
 logging.info(f"Loaded SAM model.")
 
-if torch.backends.mps.is_available():
-    sam.to(device="mps")
-    logging.info(f"Using MPS for SAM.")
-elif torch.cuda.is_available():
-    sam.to(device="cuda")
-    logging.info(f"Using CUDA for SAM.")
-else:
-    logging.info(f"Using CPU for SAM.")
+# if torch.backends.mps.is_available():
+#     sam.to(device="mps")
+#     logging.info(f"Using MPS for SAM.")
+# elif torch.cuda.is_available():
+#     sam.to(device="cuda")
+#     logging.info(f"Using CUDA for SAM.")
+# else:
+logging.info(f"Using CPU for SAM.")
 
 
 app = FastAPI()
