@@ -69,7 +69,12 @@ export function ImageDropArea() {
               isSelected ? "bg-gray-700" : ""
             } ${isSelected ? "text-gray-200" : "text-gray-500"}`}
           >
-            <img src={image.url} className="w-10 h-10 rounded object-cover" />
+            <div className="w-10 h-10 rounded overflow-hidden relative flex-shrink-0">
+              <img
+                src={image.url}
+                className="w-[200%] h-[200%] rounded object-cover absolute -top-1/2 -left-1/2 max-w-[unset]"
+              />
+            </div>
             <span
               className="break-all"
               style={{

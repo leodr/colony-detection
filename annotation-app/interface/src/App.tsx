@@ -3,7 +3,7 @@ import { ImageDropArea } from "./ImageDropArea";
 
 function App() {
   return (
-    <div className="py-6 px-5 bg-gray-950 flex min-h-screen text-white">
+    <div className="p-3 flex min-h-screen">
       <nav className="w-96">
         <ImageDropArea></ImageDropArea>
       </nav>
