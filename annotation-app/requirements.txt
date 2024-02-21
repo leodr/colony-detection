@@ -1,5 +1,7 @@
 numpy
 torch
+torchvision
+torchaudio
 uvicorn
 fastapi
 pillow
