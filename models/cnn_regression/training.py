@@ -5,7 +5,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from dataset import CNNRegressionDataset
-from model import CountingCNN, model
+from model import CountingCNN
 from torch.utils.data import DataLoader
 
 device = "cpu"
