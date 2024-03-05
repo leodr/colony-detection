@@ -28,8 +28,7 @@ class CountingCNN(nn.Module):
         )
 
     def forward(self, x):
-        output = self.model(x)
-        return output.squeeze(-1)
+        return self.model(x)
 
 
 model = CountingCNN()

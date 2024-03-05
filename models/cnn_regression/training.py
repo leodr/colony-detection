@@ -1,3 +1,4 @@
+# %%
 from pathlib import Path
 
 import torch
@@ -6,8 +7,6 @@ import torch.optim as optim
 from dataset import CNNRegressionDataset
 from model import CountingCNN, model
 from torch.utils.data import DataLoader
-
-NUM_EPOCHS = 10
 
 device = "cpu"
 
@@ -21,6 +20,7 @@ elif torch.cuda.is_available():
 else:
     print("Using CPU for training.")
 
+# %%
 train_dataset = CNNRegressionDataset(path=Path("training_data/train"))
 val_dataset = CNNRegressionDataset(path=Path("training_data/val"))
 test_dataset = CNNRegressionDataset(path=Path("training_data/test"))
@@ -33,7 +33,9 @@ model = CountingCNN().to(device)
 criterion = nn.MSELoss()
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 
-# Training loop
+# %% Training loop
+NUM_EPOCHS = 10
+
 for epoch in range(NUM_EPOCHS):
     model.train()
     running_loss = 0.0
@@ -42,7 +44,8 @@ for epoch in range(NUM_EPOCHS):
 
         optimizer.zero_grad()
         outputs = model(inputs)
-        loss = criterion(outputs.squeeze(), counts)
+        print(outputs.shape, counts.shape)
+        loss = criterion(outputs, counts)
         loss.backward()
         optimizer.step()
         running_loss += loss.item()
@@ -56,11 +59,13 @@ for epoch in range(NUM_EPOCHS):
             inputs, counts = inputs.to(device), counts.to(device)
 
             outputs = model(inputs)
-            loss = criterion(outputs.squeeze(), counts)
+            print(outputs.shape, counts.shape)
+            loss = criterion(outputs, counts)
             val_loss += loss.item()
     print(f"Epoch {epoch}, Validation Loss: {val_loss / len(val_loader)}")
 
-# Test loop
+
+# %% Test loop
 model.eval()
 test_loss = 0.0
 with torch.no_grad():
@@ -68,6 +73,8 @@ with torch.no_grad():
         inputs, counts = inputs.to(device), counts.to(device)
 
         outputs = model(inputs)
-        loss = criterion(outputs.squeeze(), counts)
+        for output in outputs:
+            print(f"Output: {output.item()}, Expected: {counts.item()}")
+        loss = criterion(outputs, counts)
         test_loss += loss.item()
 print(f"Test Loss: {test_loss / len(test_loader)}")

@@ -52,6 +52,6 @@ class CNNRegressionDataset(Dataset):
         count = int(re.findall(r"\d+", mask_path.stem)[-1])
 
         # Convert the count to a torch.Tensor
-        count_tensor = torch.tensor(count, dtype=torch.float32)
+        count_tensor = torch.tensor([count], dtype=torch.float32)
 
         return image_transformed, count_tensor
