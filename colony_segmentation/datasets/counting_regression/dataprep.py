@@ -13,8 +13,8 @@ def create_folders():
 
 create_folders()
 
-image_paths = list(Path("../../data/labeled/images").glob("*.jpg"))
-mask_paths = list(Path("../../data/labeled/masks").glob("*.png"))
+image_paths = list(Path("../../../data/labeled/images").glob("*.jpg"))
+mask_paths = list(Path("../../../data/labeled/masks").glob("*.png"))
 
 pairs = []
 
