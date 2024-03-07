@@ -1,4 +1,3 @@
-import torch
 import torch.nn as nn
 
 
@@ -28,4 +27,4 @@ class CountingFCN(nn.Module):
     def forward(self, x):
         x = self.features(x)
         x = self.classifier(x)
-        return x.view(-1)  # Flatten the output to shape [1] for the count
+        return x.reshape(x.size(0), -1)
