@@ -3,16 +3,34 @@ from pathlib import Path
 from typing import List, Tuple
 
 import cv2
-import numpy as np
 import torch
 from torch.utils.data import Dataset
 from torchvision.transforms import v2
 
-transform = v2.Compose([v2.ToImage(), v2.ToDtype(torch.float32, scale=True)])
+random_even_rotation = v2.RandomChoice(
+    [
+        v2.RandomRotation((0, 0)),
+        v2.RandomRotation((90, 90)),
+        v2.RandomRotation((180, 180)),
+        v2.RandomRotation((270, 270)),
+    ]
+)
+
+transform = v2.Compose(
+    [
+        v2.ToImage(),
+        v2.ToDtype(torch.uint8, scale=True),
+        v2.RandomHorizontalFlip(),
+        v2.RandomVerticalFlip(),
+        random_even_rotation,
+        v2.ColorJitter(brightness=0.1, contrast=0.1),
+        v2.ToDtype(torch.float32, scale=True),
+    ]
+)
 
 
-class CNNRegressionDataset(Dataset):
-    """Dataset for retrieving images and their respective counts."""
+class CountingRegressionDataset(Dataset):
+    """Dataset that provides images and their respective counting results."""
 
     pairs: List[Tuple[Path, Path]]
 
@@ -51,7 +69,6 @@ class CNNRegressionDataset(Dataset):
         # Extract the count from the mask filename and convert it to an integer
         count = int(re.findall(r"\d+", mask_path.stem)[-1])
 
-        # Convert the count to a torch.Tensor
         count_tensor = torch.tensor([count], dtype=torch.float32)
 
         return image_transformed, count_tensor

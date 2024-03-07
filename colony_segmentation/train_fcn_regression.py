@@ -6,8 +6,9 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from dataset import FCNRegressionDataset
-from model import CountingFCN
 from torch.utils.data import DataLoader
+
+from colony_segmentation.models.fcn_regression import CountingFCN
 
 device = "cpu"
 
@@ -35,7 +36,7 @@ criterion = nn.MSELoss()
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 
 # %% Training loop
-NUM_EPOCHS = 10
+NUM_EPOCHS = 100
 
 train_losses = []
 val_losses = []

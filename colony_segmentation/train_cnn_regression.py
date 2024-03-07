@@ -5,8 +5,8 @@ import matplotlib.pyplot as plt
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from dataset import CNNRegressionDataset
-from model import CountingCNN
+from datasets.counting_regression.dataset import CountingRegressionDataset
+from models.cnn_regression import CountingCNN
 from torch.utils.data import DataLoader
 
 device = "cpu"
@@ -22,9 +22,15 @@ else:
     print("Using CPU for training.")
 
 # %%
-train_dataset = CNNRegressionDataset(path=Path("training_data/train"))
-val_dataset = CNNRegressionDataset(path=Path("training_data/val"))
-test_dataset = CNNRegressionDataset(path=Path("training_data/test"))
+train_dataset = CountingRegressionDataset(
+    path=Path("datasets/counting_regression/training_data/train")
+)
+val_dataset = CountingRegressionDataset(
+    path=Path("datasets/counting_regression/training_data/val")
+)
+test_dataset = CountingRegressionDataset(
+    path=Path("datasets/counting_regression/training_data/test")
+)
 
 train_loader = DataLoader(train_dataset, batch_size=4, shuffle=True)
 val_loader = DataLoader(val_dataset, batch_size=4, shuffle=False)
@@ -35,7 +41,7 @@ criterion = nn.MSELoss()
 optimizer = optim.Adam(model.parameters(), lr=0.001)
 
 # %% Training loop
-NUM_EPOCHS = 10
+NUM_EPOCHS = 100
 
 train_losses = []
 val_losses = []
