@@ -5,10 +5,9 @@ import matplotlib.pyplot as plt
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from dataset import FCNRegressionDataset
+from datasets.counting_regression.dataset import CountingRegressionDataset
+from models.fcn_regression import CountingFCN
 from torch.utils.data import DataLoader
-
-from colony_segmentation.models.fcn_regression import CountingFCN
 
 device = "cpu"
 
@@ -23,9 +22,15 @@ else:
     print("Using CPU for training.")
 
 # %%
-train_dataset = FCNRegressionDataset(path=Path("training_data/train"))
-val_dataset = FCNRegressionDataset(path=Path("training_data/val"))
-test_dataset = FCNRegressionDataset(path=Path("training_data/test"))
+train_dataset = CountingRegressionDataset(
+    path=Path("datasets/counting_regression/training_data/train")
+)
+val_dataset = CountingRegressionDataset(
+    path=Path("datasets/counting_regression/training_data/val")
+)
+test_dataset = CountingRegressionDataset(
+    path=Path("datasets/counting_regression/training_data/test")
+)
 
 train_loader = DataLoader(train_dataset, batch_size=4, shuffle=True)
 val_loader = DataLoader(val_dataset, batch_size=4, shuffle=False)
@@ -86,7 +91,8 @@ print(f"Model saved to {model_path}")
 
 # %% Test loop
 
-model.load_state_dict(torch.load(model_path))
+model = CountingFCN()
+model.load_state_dict(torch.load("model.pth"))
 model.to(device)
 print("Model loaded for testing")
 
