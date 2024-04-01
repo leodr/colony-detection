@@ -221,14 +221,10 @@ def register_click(
     """
     state = get_image_state(image_id)
 
-    logger.info(f"Received click at ({click_data.x}, {click_data.y}). expand={expand}.")
-
     if expand and len(state.clicks) > 0:
         state.clicks[-1].append((click_data.x, click_data.y))
     else:
         state.clicks.append([(click_data.x, click_data.y)])
-
-    logger.info(f"Clicks: {state.clicks}.")
 
     masks, _, _ = state.predictor.predict(
         point_coords=np.array([[click_data.x, click_data.y]]),
