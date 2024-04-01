@@ -189,13 +189,15 @@ export function Canvas() {
       const canvasWidth = target.clientWidth;
       const canvasHeight = target.clientHeight;
 
+      const shiftPressed = e.shiftKey;
+
       const imageCoordinates = getImageCoordinates(
         { x: relativeX, y: relativeY },
         { width: canvasWidth, height: canvasHeight },
         { width: image.width, height: image.height }
       );
 
-      fetch(resolveUrl(`/images/${imageId}/clicks`), {
+      fetch(resolveUrl(`/images/${imageId}/clicks?expand=${shiftPressed}`), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

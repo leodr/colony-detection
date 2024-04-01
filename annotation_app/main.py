@@ -71,7 +71,7 @@ class ImageState:
     image_shape: Tuple[int, int]
     predictor: SamPredictor
     masks_stack: List[np.ndarray]
-    clicks: List[Tuple[int, int]]
+    clicks: List[List[Tuple[int, int]]]
 
     def __init__(self, image: np.ndarray):
         self.image_shape = image.shape
@@ -94,7 +94,10 @@ class ImageState:
             self.masks_stack = [np.zeros(self.image_shape, dtype=np.uint8)]
 
         if len(self.clicks) > 0:
-            self.clicks.pop()
+            self.clicks[-1].pop()
+
+            if len(self.clicks[-1]) == 0:
+                self.clicks.pop()
 
     def clear_mask(self):
         self.masks_stack = [np.zeros(self.image_shape, dtype=np.uint8)]
@@ -201,7 +204,9 @@ class ClickData(BaseModel):
 
 
 @app.post("/images/{image_id}/clicks")
-def register_click(image_id: str, click_data: ClickData) -> StreamingResponse:
+def register_click(
+    image_id: str, click_data: ClickData, expand: bool = False
+) -> StreamingResponse:
     """Registers a click on the image with the given ID and returns the new mask.
 
     Args:
@@ -216,7 +221,14 @@ def register_click(image_id: str, click_data: ClickData) -> StreamingResponse:
     """
     state = get_image_state(image_id)
 
-    state.clicks.append((click_data.x, click_data.y))
+    logger.info(f"Received click at ({click_data.x}, {click_data.y}). expand={expand}.")
+
+    if expand and len(state.clicks) > 0:
+        state.clicks[-1].append((click_data.x, click_data.y))
+    else:
+        state.clicks.append([(click_data.x, click_data.y)])
+
+    logger.info(f"Clicks: {state.clicks}.")
 
     masks, _, _ = state.predictor.predict(
         point_coords=np.array([[click_data.x, click_data.y]]),
