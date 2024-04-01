@@ -13,7 +13,7 @@ FLOODFILL_FLAGS |= 255 << 8
 def merge_masks(
     existing_mask: np.ndarray,
     new_mask: np.ndarray,
-    center_points: List[Tuple[int, int]],
+    center_points: List[List[Tuple[int, int]]],
 ) -> np.ndarray:
     """
     Merges an existing mask with a new mask, using the center point of the new mask to determine the color of each pixel.
@@ -21,7 +21,7 @@ def merge_masks(
     Args:
         existing_mask (np.ndarray): The existing (colored) mask
         new_mask (np.ndarray): The new mask (binary, True and False)
-        center_points (List[Tuple[int, int]]): The list of center points for each region
+        center_points (List[List[Tuple[int, int]]]): The list of center points for each region
 
     Returns:
         np.ndarray: The resulting colored mask
@@ -36,7 +36,7 @@ def merge_masks(
     height, width = binary_mask.shape[:2]
     floodfill_mask = np.zeros((height + 2, width + 2), np.uint8)
 
-    new_center = center_points[-1]
+    new_center = center_points[-1][-1]
 
     cv2.floodFill(binary_mask, floodfill_mask, new_center, 255, flags=FLOODFILL_FLAGS)
 
@@ -45,7 +45,13 @@ def merge_masks(
 
     colors = get_n_random_colors(len(center_points))
 
-    center_points_with_colors = np.concatenate([center_points, colors], axis=1)
+    point_count = sum(len(points) for points in center_points)
+
+    center_points_with_colors = np.zeros((point_count, 5), dtype=np.uint32)
+
+    for i, center_point in enumerate(center_points):
+        for j, point in enumerate(center_point):
+            center_points_with_colors[i + j] = [*point, *colors[i]]
 
     x_coords = center_points_with_colors[:, 0]
     y_coords = center_points_with_colors[:, 1]
