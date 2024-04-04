@@ -86,16 +86,24 @@ export function Canvas() {
     if (image && selectedImage && mask) {
       const link = document.createElement("a");
 
-      link.download =
+      const filename =
         images[selectedImage]?.filename.split(".").slice(0, -1).join(".") +
         `_mask_${counter}.png`;
+
+      fetch(resolveUrl(`/images/${imageId}/finish`), {
+        method: "POST",
+        body: JSON.stringify({ filename }),
+        headers: { "Content-Type": "application/json" },
+      });
+
+      link.download = filename;
       link.href = mask.src;
 
       link.click();
     }
 
     dispatch(removeSelectedImage());
-  }, [counter, dispatch, image, images, mask, selectedImage]);
+  }, [counter, dispatch, image, imageId, images, mask, selectedImage]);
 
   useEffect(() => {
     const unsubscribe = tinykeys(window, {

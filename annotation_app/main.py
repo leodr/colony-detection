@@ -3,6 +3,7 @@ import logging
 import os
 import shutil
 import uuid
+from pathlib import Path
 from typing import List, Tuple
 
 import numpy as np
@@ -298,6 +299,32 @@ def clear_mask(image_id: str) -> StreamingResponse:
     state.clear_mask()
 
     return image_array_to_response(state.current_mask)
+
+
+output_path = Path(__file__).parent / "output"
+
+
+class FinishData(BaseModel):
+    filename: str
+
+
+@app.post("/images/{image_id}/finish")
+def finish_image(image_id: str, data: FinishData) -> None:
+    """Finishes the image with the given ID.
+
+    Args:
+        image_id (str): The ID of the image to finish.
+    """
+    state = get_image_state(image_id)
+
+    output_path.mkdir(parents=True, exist_ok=True)
+
+    mask = state.current_mask
+
+    mask_image = Image.fromarray(mask)
+    mask_image.save(output_path / data.filename)
+
+    del state_map[image_id]
 
 
 @app.delete("/images/{image_id}")
