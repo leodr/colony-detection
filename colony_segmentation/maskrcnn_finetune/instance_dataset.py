@@ -26,8 +26,7 @@ def colormask_to_binary_masks(mask: torch.Tensor) -> List[torch.Tensor]:
     instance_ids = instance_ids[1:]
 
     # split the color-encoded mask into a set of binary masks
-    masks = (int_mask == instance_ids[:, None, None]).to(dtype=torch.uint8)
-
+    masks = (int_mask == instance_ids[:, None, None]).to(dtype=torch.bool)
     return masks
 
 
