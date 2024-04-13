@@ -11,19 +11,15 @@ import numpy as np
 
 @contextmanager
 def timer(label="Execution Time"):
-    """
-    A context manager to measure the execution time of a block of code.
-    """
     start = time.time()
     yield
-    end = time.time()
-    duration = end - start
+    duration = time.time() - start
     print(f"{label}: {duration:1.3f}s")
 
 
 CLASSES = ["0", "1", "2", "3", "4", "5"]
 
-# Color codes for colony classes (1 - 5)
+# Grayscale colors for colony classes (1 - 5)
 COLORS = [
     (51, 51, 51),
     (102, 102, 102),
@@ -84,45 +80,35 @@ def generate_random_boxes(
     return random_boxes
 
 
-images_path = Path("training_data/images")
-masks_path = Path("training_data/masks")
-binary_masks_path = Path("training_data/binary_masks")
-class_masks_path = Path("training_data/class_masks")
-patches_path = Path("training_data/patches")
+def setup_directories(base_path):
+    base_path = Path(base_path)
+    images_path = base_path / "images"
+    masks_path = base_path / "masks"
+    binary_masks_path = base_path / "binary_masks"
+    class_masks_path = base_path / "class_masks"
+    patches_path = base_path / "patches"
 
-# Ensure the directories exist
-images_path.mkdir(parents=True, exist_ok=True)
-masks_path.mkdir(parents=True, exist_ok=True)
-binary_masks_path.mkdir(parents=True, exist_ok=True)
-class_masks_path.mkdir(parents=True, exist_ok=True)
+    images_path.mkdir(parents=True, exist_ok=True)
+    masks_path.mkdir(parents=True, exist_ok=True)
+    binary_masks_path.mkdir(parents=True, exist_ok=True)
+    class_masks_path.mkdir(parents=True, exist_ok=True)
 
-for class_name in CLASSES:
-    (patches_path / class_name).mkdir(parents=True, exist_ok=True)
+    for class_name in CLASSES:
+        (patches_path / class_name).mkdir(parents=True, exist_ok=True)
 
-# Paths to the source data
-image_paths = list(sorted(Path("data/labeled/images").glob("*.jpg")))
-mask_paths = list(sorted(Path("data/labeled/masks").glob("*.png")))
+    return images_path, masks_path, binary_masks_path, class_masks_path, patches_path
 
-pairs = []
 
-# Match each image with its corresponding mask
-for image_path in image_paths:
-    mask_path = None
-    for mask in mask_paths:
-        if mask.stem.startswith(image_path.stem):
-            mask_path = mask
-            break
-
-    if mask_path is not None:
-        pairs.append((image_path, mask_path))
-
-print(f"Found {len(pairs)} pairs of images and masks.")
-
-metadata = [["filename", "instance_count"]]
-
-for i in range(len(pairs)):
-    print("\nProcessing pair", i + 1, "of", len(pairs))
-    image_path, mask_path = pairs[i]
+def process_item(
+    image_path,
+    mask_path,
+    images_path,
+    masks_path,
+    binary_masks_path,
+    class_masks_path,
+    patches_path,
+):
+    metadata = []
 
     with timer(" - Copying image and mask"):
         copy2(image_path, images_path)
@@ -205,10 +191,86 @@ for i in range(len(pairs)):
                 filename = str(patches_path / f"0/{mask_path.stem}_{i}.png")
                 cv2.imwrite(filename, patch)
 
+    return metadata
 
-# Write metadata to CSV file
-with open("training_data/metadata.csv", "w", newline="") as f:
-    writer = csv.writer(f)
-    writer.writerows(metadata)
 
-print("\nMetadata saved to metadata.csv")
+def main():
+    (
+        train_images_path,
+        train_masks_path,
+        train_binary_masks_path,
+        train_class_masks_path,
+        train_patches_path,
+    ) = setup_directories("training_data")
+    (
+        test_images_path,
+        test_masks_path,
+        test_binary_masks_path,
+        test_class_masks_path,
+        test_patches_path,
+    ) = setup_directories("test_data")
+
+    mask_paths = list(sorted(Path("data/labeled/masks").glob("*.png")))
+
+    pairs = [
+        (Path(f"data/labeled/images/{mask_path.stem}.jpg"), mask_path)
+        for mask_path in mask_paths
+    ]
+
+    random.seed(42)
+    random.shuffle(pairs)
+    num_test = int(len(pairs) * 0.2)
+    test_pairs = pairs[:num_test]
+    train_pairs = pairs[num_test:]
+
+    print(f"Found {len(pairs)} pairs of images and masks.")
+    print(f"Training pairs: {len(train_pairs)}")
+    print(f"Test pairs: {len(test_pairs)}")
+
+    # Training data processing
+    training_metadata = [["filename", "instance_count"]]
+    for i, (image_path, mask_path) in enumerate(train_pairs):
+        print("\nProcessing training pair", i + 1, "of", len(train_pairs))
+
+        metadata_chunk = process_item(
+            image_path,
+            mask_path,
+            train_images_path,
+            train_masks_path,
+            train_binary_masks_path,
+            train_class_masks_path,
+            train_patches_path,
+        )
+        training_metadata.append(metadata_chunk)
+
+    with open("training_data/metadata.csv", "w", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerows(training_metadata)
+
+    print("\nMetadata saved to metadata.csv")
+
+    # Test data processing
+    test_metadata = [["filename", "instance_count"]]
+    for i, (image_path, mask_path) in enumerate(test_pairs):
+        print("\nProcessing test pair", i + 1, "of", len(test_pairs))
+
+        metadata_chunk = process_item(
+            image_path,
+            mask_path,
+            test_images_path,
+            test_masks_path,
+            test_binary_masks_path,
+            test_class_masks_path,
+            test_patches_path,
+        )
+        test_metadata.append(metadata_chunk)
+
+    with open("test_data/metadata.csv", "w", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerows(test_metadata)
+
+    print("\nMetadata saved to metadata.csv")
+
+
+if __name__ == "__main__":
+    main()
