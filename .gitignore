@@ -188,6 +188,11 @@ cython_debug/
 #.idea/
 
 training_data/
+test_data/
 
 # Downloaded model files
 *.pth
+
+# Training results
+results.csv
+final-results.csv

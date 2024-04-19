@@ -1,0 +1,14 @@
+version: "3.8"
+
+services:
+  annotation_app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    volumes:
+      - annotation_app_output:/app/output
+
+volumes:
+  annotation_app_output:
