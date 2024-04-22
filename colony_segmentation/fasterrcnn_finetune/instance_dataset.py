@@ -1,54 +1,38 @@
+import json
 import os
-from typing import List
 
+import numpy as np
 import torch
 from torchvision import tv_tensors
 from torchvision.io import read_image
-from torchvision.ops.boxes import masks_to_boxes
 from torchvision.transforms.v2 import functional as F
 
 
-def colormask_to_binary_masks(mask: torch.Tensor) -> List[torch.Tensor]:
-    """Converts a color-encoded mask to a set of binary masks.
-
-    Args:
-        mask (torch.Tensor): A color-encoded mask tensor of shape [C, H, W].
-
-    Returns:
-        List[torch.Tensor]: A list of binary masks, each of shape [H, W].
-    """
-
-    # turn mask from [C, H, W] to [H, W] by combining the color channels into a single integer
-    int_mask = (mask[0].int() << 16) + (mask[1].int() << 8) + mask[2].int()
-
-    instance_ids = torch.unique(int_mask)
-    # first id is the background (black), so remove it
-    instance_ids = instance_ids[1:]
-
-    # split the color-encoded mask into a set of binary masks
-    masks = (int_mask == instance_ids[:, None, None]).to(dtype=torch.bool)
-    return masks
-
-
-class SegmentationInstanceDataset(torch.utils.data.Dataset):
+class BoundingBoxDataset(torch.utils.data.Dataset):
     def __init__(self, root, transforms):
         self.root = root
         self.transforms = transforms
 
         # load all image files, sorting them to ensure that they are aligned
         self.imgs = list(sorted(os.listdir(os.path.join(root, "images"))))
-        self.masks = list(sorted(os.listdir(os.path.join(root, "masks"))))
+        self.boxes = list(sorted(os.listdir(os.path.join(root, "boxes"))))
 
     def __getitem__(self, idx):
         img_path = os.path.join(self.root, "images", self.imgs[idx])
-        mask_path = os.path.join(self.root, "masks", self.masks[idx])
+        boxes_path = os.path.join(self.root, "boxes", self.boxes[idx])
         img = read_image(img_path)
-        mask = read_image(mask_path)
+        with open(boxes_path, "r") as f:
+            boxes_json = json.load(f)
 
-        masks = colormask_to_binary_masks(mask)
-        boxes = masks_to_boxes(masks)
+        boxes = np.zeros((len(boxes_json["boxes"]), 4), dtype=np.float32)
 
-        num_masks = len(masks)
+        for i, box in enumerate(boxes_json["boxes"]):
+            boxes[i][0] = box["x"]
+            boxes[i][1] = box["y"]
+            boxes[i][2] = box["x"] + box["width"]
+            boxes[i][3] = box["y"] + box["height"]
+
+        num_boxes = len(boxes)
 
         img = tv_tensors.Image(img)
 
@@ -56,11 +40,10 @@ class SegmentationInstanceDataset(torch.utils.data.Dataset):
             "boxes": tv_tensors.BoundingBoxes(
                 boxes, format="XYXY", canvas_size=F.get_size(img)
             ),
-            "masks": tv_tensors.Mask(masks),
             # there is only one class (colony)
-            "labels": torch.ones(num_masks, dtype=torch.int64),
+            "labels": torch.ones(num_boxes, dtype=torch.int64),
             "image_id": idx,
-            "iscrowd": torch.zeros(num_masks, dtype=torch.int64),
+            "iscrowd": torch.zeros(num_boxes, dtype=torch.int64),
             "area": (boxes[:, 3] - boxes[:, 1]) * (boxes[:, 2] - boxes[:, 0]),
         }
 
