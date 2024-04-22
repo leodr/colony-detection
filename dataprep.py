@@ -1,6 +1,8 @@
 import csv
+import json
 import random
 import time
+from collections import defaultdict
 from contextlib import contextmanager
 from pathlib import Path
 from shutil import copy2
@@ -87,16 +89,25 @@ def setup_directories(base_path):
     binary_masks_path = base_path / "binary_masks"
     class_masks_path = base_path / "class_masks"
     patches_path = base_path / "patches"
+    boxes_path = base_path / "boxes"
 
     images_path.mkdir(parents=True, exist_ok=True)
     masks_path.mkdir(parents=True, exist_ok=True)
     binary_masks_path.mkdir(parents=True, exist_ok=True)
     class_masks_path.mkdir(parents=True, exist_ok=True)
+    boxes_path.mkdir(parents=True, exist_ok=True)
 
     for class_name in CLASSES:
         (patches_path / class_name).mkdir(parents=True, exist_ok=True)
 
-    return images_path, masks_path, binary_masks_path, class_masks_path, patches_path
+    return (
+        images_path,
+        masks_path,
+        binary_masks_path,
+        class_masks_path,
+        patches_path,
+        boxes_path,
+    )
 
 
 def process_item(
@@ -107,6 +118,7 @@ def process_item(
     binary_masks_path,
     class_masks_path,
     patches_path,
+    boxes_path,
 ):
     metadata = []
 
@@ -133,6 +145,29 @@ def process_item(
         metadata.append([mask_path.name, unique_colors_count])
 
     print("   Found", unique_colors_count, "instances in the mask")
+
+    with timer(" - Saving bounding boxes"):
+        bounding_boxes = []
+
+        for color in unique_colors:
+            rows, cols = np.where(int_mask == color)
+
+            min_row = np.min(rows)
+            max_row = np.max(rows)
+            min_col = np.min(cols)
+            max_col = np.max(cols)
+
+            x = float(min_col)
+            y = float(min_row)
+            width = float(max_col - min_col + 1)
+            height = float(max_row - min_row + 1)
+
+            bounding_boxes.append({"x": x, "y": y, "width": width, "height": height})
+
+        assert len(bounding_boxes) == unique_colors_count, "Mismatch in box count"
+
+        with open(boxes_path / f"{mask_path.stem}.json", "w") as f:
+            json.dump({"boxes": bounding_boxes}, f)
 
     with timer(" - Saving class mask and patches"):
         num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(
@@ -201,6 +236,7 @@ def main():
         train_binary_masks_path,
         train_class_masks_path,
         train_patches_path,
+        train_boxes_path,
     ) = setup_directories("training_data")
     (
         test_images_path,
@@ -208,6 +244,7 @@ def main():
         test_binary_masks_path,
         test_class_masks_path,
         test_patches_path,
+        test_boxes_path,
     ) = setup_directories("test_data")
 
     mask_paths = list(sorted(Path("data/labeled/masks").glob("*.png")))
@@ -240,6 +277,7 @@ def main():
             train_binary_masks_path,
             train_class_masks_path,
             train_patches_path,
+            train_boxes_path,
         )
         training_metadata.append(metadata_chunk)
 
@@ -262,6 +300,7 @@ def main():
             test_binary_masks_path,
             test_class_masks_path,
             test_patches_path,
+            test_boxes_path,
         )
         test_metadata.append(metadata_chunk)
 
