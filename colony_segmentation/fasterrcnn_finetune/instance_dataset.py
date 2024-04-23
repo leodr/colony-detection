@@ -24,13 +24,13 @@ class BoundingBoxDataset(torch.utils.data.Dataset):
         with open(boxes_path, "r") as f:
             boxes_json = json.load(f)
 
-        boxes = np.zeros((len(boxes_json["boxes"]), 4), dtype=np.float32)
-
-        for i, box in enumerate(boxes_json["boxes"]):
-            boxes[i][0] = box["x"]
-            boxes[i][1] = box["y"]
-            boxes[i][2] = box["x"] + box["width"]
-            boxes[i][3] = box["y"] + box["height"]
+        boxes = np.array(
+            [
+                [box["x"], box["y"], box["x"] + box["width"], box["y"] + box["height"]]
+                for box in boxes_json["boxes"]
+            ],
+            dtype=np.float32,
+        )
 
         num_boxes = len(boxes)
 
