@@ -196,3 +196,6 @@ test_data/
 # Training results
 results.csv
 final-results.csv
+
+# AGAR dataset too large for git
+AGAR_dataset/
