@@ -54,8 +54,9 @@ def train_one_epoch(
             print(loss_dict_reduced)
             sys.exit(1)
 
+        optimizer.zero_grad()
+
         if optimize:
-            optimizer.zero_grad()
             if scaler is not None:
                 scaler.scale(losses).backward()
                 scaler.step(optimizer)
