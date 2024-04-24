@@ -14,7 +14,7 @@ class AgarBoundingBoxDataset(torch.utils.data.Dataset):
         self.root = root
         self.transforms = transforms
 
-        # load all image files, sorting them to ensure that they are aligned
+        # load all image and boxes files, sorting them to ensure that they are aligned
         self.imgs = list(sorted([f"{id}.jpg" for id in ids]))
         self.boxes = list(sorted([f"{id}.json" for id in ids]))
 

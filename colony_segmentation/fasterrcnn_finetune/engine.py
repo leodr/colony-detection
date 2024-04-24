@@ -10,7 +10,7 @@ from coco_utils import get_coco_api_from_dataset
 
 
 def train_one_epoch(
-    model, optimizer, data_loader, device, epoch, print_freq, scaler=None
+    model, optimizer, data_loader, device, epoch, print_freq, scaler=None, optimize=True
 ):
     model.train()
     metric_logger = utils.MetricLogger(delimiter="  ")
@@ -54,17 +54,18 @@ def train_one_epoch(
             print(loss_dict_reduced)
             sys.exit(1)
 
-        optimizer.zero_grad()
-        if scaler is not None:
-            scaler.scale(losses).backward()
-            scaler.step(optimizer)
-            scaler.update()
-        else:
-            losses.backward()
-            optimizer.step()
+        if optimize:
+            optimizer.zero_grad()
+            if scaler is not None:
+                scaler.scale(losses).backward()
+                scaler.step(optimizer)
+                scaler.update()
+            else:
+                losses.backward()
+                optimizer.step()
 
-        if lr_scheduler is not None:
-            lr_scheduler.step()
+            if lr_scheduler is not None:
+                lr_scheduler.step()
 
         metric_logger.update(loss=losses_reduced, **loss_dict_reduced)
         metric_logger.update(lr=optimizer.param_groups[0]["lr"])
@@ -98,7 +99,12 @@ def evaluate(model, data_loader, device):
     iou_types = _get_iou_types(model)
     coco_evaluator = CocoEvaluator(coco, iou_types)
 
+    acc_absolute_error = 0
+    acc_relative_error = 0
+
     for images, targets in metric_logger.log_every(data_loader, 100, header):
+        correct_counts = [target["labels"].sum() for target in targets]
+
         images = list(img.to(device) for img in images)
 
         if torch.cuda.is_available():
@@ -109,11 +115,20 @@ def evaluate(model, data_loader, device):
         outputs = [{k: v.to(cpu_device) for k, v in t.items()} for t in outputs]
         model_time = time.time() - model_time
 
+        predicted_counts = [output["labels"].sum() for output in outputs]
+
+        for correct_count, predicted_count in zip(correct_counts, predicted_counts):
+            acc_absolute_error += abs(correct_count - predicted_count)
+            acc_relative_error += abs(correct_count - predicted_count) / correct_count
+
         res = {target["image_id"]: output for target, output in zip(targets, outputs)}
         evaluator_time = time.time()
         coco_evaluator.update(res)
         evaluator_time = time.time() - evaluator_time
         metric_logger.update(model_time=model_time, evaluator_time=evaluator_time)
+
+    avg_absolute_error = acc_absolute_error / len(data_loader.dataset)
+    avg_relative_error = acc_relative_error / len(data_loader.dataset)
 
     # gather the stats from all processes
     metric_logger.synchronize_between_processes()
@@ -124,4 +139,4 @@ def evaluate(model, data_loader, device):
     coco_evaluator.accumulate()
     coco_evaluator.summarize()
     torch.set_num_threads(n_threads)
-    return coco_evaluator
+    return coco_evaluator, avg_absolute_error, avg_relative_error

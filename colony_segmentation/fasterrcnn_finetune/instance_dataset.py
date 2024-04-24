@@ -9,6 +9,8 @@ from torchvision.transforms.v2 import functional as F
 
 
 class BoundingBoxDataset(torch.utils.data.Dataset):
+    num_classes = 2  # background and colony
+
     def __init__(self, root, transforms):
         self.root = root
         self.transforms = transforms
@@ -26,7 +28,7 @@ class BoundingBoxDataset(torch.utils.data.Dataset):
 
         boxes = np.array(
             [
-                [box["x"], box["y"], box["x"] + box["width"], box["y"] + box["height"]]
+                (box["x"], box["y"], box["x"] + box["width"], box["y"] + box["height"])
                 for box in boxes_json["boxes"]
             ],
             dtype=np.float32,
@@ -44,7 +46,11 @@ class BoundingBoxDataset(torch.utils.data.Dataset):
             "labels": torch.ones(num_boxes, dtype=torch.int64),
             "image_id": idx,
             "iscrowd": torch.zeros(num_boxes, dtype=torch.int64),
-            "area": (boxes[:, 3] - boxes[:, 1]) * (boxes[:, 2] - boxes[:, 0]),
+            "area": (
+                (boxes[:, 3] - boxes[:, 1]) * (boxes[:, 2] - boxes[:, 0])
+                if num_boxes > 0
+                else torch.tensor([])
+            ),
         }
 
         if self.transforms is not None:

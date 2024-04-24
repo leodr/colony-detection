@@ -16,19 +16,19 @@ def get_transforms(is_train: bool):
 
     if is_train:
         transforms.append(T.RandomHorizontalFlip(0.5))
-        # transforms.append(T.RandomVerticalFlip(0.5))
+        transforms.append(T.RandomVerticalFlip(0.5))
         # Rotation by 0, 90, 180, or 270 degrees
-        # transforms.append(
-        #     T.RandomChoice(
-        #         [
-        #             T.RandomRotation((0, 0)),
-        #             T.RandomRotation((90, 90)),
-        #             T.RandomRotation((180, 180)),
-        #             T.RandomRotation((270, 270)),
-        #         ]
-        #     )
-        # )
-        # transforms.append(T.ColorJitter(brightness=0.1, contrast=0.1))
+        transforms.append(
+            T.RandomChoice(
+                [
+                    T.RandomRotation((0, 0)),
+                    T.RandomRotation((90, 90)),
+                    T.RandomRotation((180, 180)),
+                    T.RandomRotation((270, 270)),
+                ]
+            )
+        )
+        transforms.append(T.ColorJitter(brightness=0.1, contrast=0.1))
 
     transforms.append(T.ToDtype(torch.float, scale=True))
     transforms.append(T.ToPureTensor())
