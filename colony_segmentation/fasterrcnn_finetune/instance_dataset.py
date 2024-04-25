@@ -26,15 +26,19 @@ class BoundingBoxDataset(torch.utils.data.Dataset):
         with open(boxes_path, "r") as f:
             boxes_json = json.load(f)
 
-        boxes = np.zeros((len(boxes_json["boxes"]), 4), dtype=np.float32)
+        labels = boxes_json["boxes"]
 
-        for i, box in enumerate(boxes_json["boxes"]):
+        boxes = np.zeros((len(labels), 4), dtype=np.float32)
+        area = np.zeros((len(labels)), dtype=np.float32)
+
+        for i, box in enumerate(labels):
             boxes[i] = [
                 box["x"],
                 box["y"],
                 box["x"] + box["width"],
                 box["y"] + box["height"],
             ]
+            area[i] = box["width"] * box["height"]
 
         num_boxes = len(boxes)
 
@@ -48,11 +52,7 @@ class BoundingBoxDataset(torch.utils.data.Dataset):
             "labels": torch.ones(num_boxes, dtype=torch.int64),
             "image_id": idx,
             "iscrowd": torch.zeros(num_boxes, dtype=torch.int64),
-            "area": (
-                (boxes[:, 3] - boxes[:, 1]) * (boxes[:, 2] - boxes[:, 0])
-                if num_boxes > 0
-                else torch.tensor([])
-            ),
+            "area": area,
         }
 
         if self.transforms is not None:
