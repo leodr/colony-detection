@@ -10,6 +10,8 @@ from torchvision.transforms.v2 import functional as F
 
 
 class AgarBoundingBoxDataset(torch.utils.data.Dataset):
+    num_classes = 2
+
     def __init__(self, root: str, ids: List[str], transforms: callable):
         self.root = root
         self.transforms = transforms
@@ -28,6 +30,7 @@ class AgarBoundingBoxDataset(torch.utils.data.Dataset):
         labels = boxes_json["labels"]
 
         boxes = np.zeros((len(labels), 4), dtype=np.float32)
+        area = np.zeros((len(labels)), dtype=np.float32)
 
         for i, box in enumerate(labels):
             boxes[i] = [
@@ -36,6 +39,7 @@ class AgarBoundingBoxDataset(torch.utils.data.Dataset):
                 box["x"] + box["width"],
                 box["y"] + box["height"],
             ]
+            area[i] = box["width"] * box["height"]
 
         num_boxes = len(boxes)
 
@@ -49,7 +53,7 @@ class AgarBoundingBoxDataset(torch.utils.data.Dataset):
             "labels": torch.ones(num_boxes, dtype=torch.int64),
             "image_id": idx,
             "iscrowd": torch.zeros(num_boxes, dtype=torch.int64),
-            "area": (boxes[:, 3] - boxes[:, 1]) * (boxes[:, 2] - boxes[:, 0]),
+            "area": area,
         }
 
         if self.transforms is not None:
