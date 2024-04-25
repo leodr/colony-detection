@@ -120,7 +120,11 @@ def evaluate(model, data_loader, device):
 
         for correct_count, predicted_count in zip(correct_counts, predicted_counts):
             acc_absolute_error += abs(correct_count - predicted_count)
-            acc_relative_error += abs(correct_count - predicted_count) / correct_count
+            acc_relative_error += (
+                (abs(correct_count - predicted_count) / correct_count)
+                if correct_count > 0
+                else 1
+            )
 
         res = {target["image_id"]: output for target, output in zip(targets, outputs)}
         evaluator_time = time.time()
