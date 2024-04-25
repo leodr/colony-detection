@@ -27,13 +27,15 @@ class AgarBoundingBoxDataset(torch.utils.data.Dataset):
 
         labels = boxes_json["labels"]
 
-        boxes = np.array(
-            [
-                [box["x"], box["y"], box["x"] + box["width"], box["y"] + box["height"]]
-                for box in labels
-            ],
-            dtype=np.float32,
-        )
+        boxes = np.zeros((len(labels), 4), dtype=np.float32)
+
+        for i, box in enumerate(labels):
+            boxes[i] = [
+                box["x"],
+                box["y"],
+                box["x"] + box["width"],
+                box["y"] + box["height"],
+            ]
 
         num_boxes = len(boxes)
 
