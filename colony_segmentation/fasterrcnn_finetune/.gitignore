@@ -1,1 +1,6 @@
+# Auto-generated script
 fastrcnn_finetune.py
+
+# Training results
+*.csv
+*.txt
