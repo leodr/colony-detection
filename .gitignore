@@ -199,3 +199,6 @@ final-results.csv
 
 # AGAR dataset too large for git
 AGAR_dataset/
+
+# Generated charts
+**/chart_*.png
