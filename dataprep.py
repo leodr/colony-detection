@@ -82,8 +82,7 @@ def generate_random_boxes(
     return random_boxes
 
 
-def setup_directories(base_path):
-    base_path = Path(base_path)
+def setup_directories(base_path: Path):
     images_path = base_path / "images"
     masks_path = base_path / "masks"
     binary_masks_path = base_path / "binary_masks"
@@ -120,14 +119,17 @@ def process_item(
     patches_path,
     boxes_path,
 ):
-    metadata = []
+    metadata = None
+    box_data = []
 
     with timer(" - Copying image and mask"):
-        copy2(image_path, images_path)
-        copy2(mask_path, masks_path)
+        image = cv2.imread(str(image_path))
+        mask = cv2.imread(str(mask_path))
+
+        cv2.imwrite(str(images_path / image_path.name), image)
+        cv2.imwrite(str(masks_path / mask_path.name), mask)
 
     with timer(" - Saving binary mask"):
-        mask = cv2.imread(str(mask_path))
         grayscale_mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
         _, binary_mask = cv2.threshold(grayscale_mask, 1, 255, cv2.THRESH_BINARY)
 
@@ -142,14 +144,14 @@ def process_item(
         unique_colors = np.unique(int_mask[int_mask != 0])
         unique_colors_count = len(unique_colors)
 
-        metadata.append([mask_path.name, unique_colors_count])
+        metadata = [mask_path.name, unique_colors_count]
 
     print("   Found", unique_colors_count, "instances in the mask")
 
     with timer(" - Saving bounding boxes"):
         bounding_boxes = []
 
-        for color in unique_colors:
+        for i, color in enumerate(unique_colors):
             rows, cols = np.where(int_mask == color)
 
             min_row = np.min(rows)
@@ -163,6 +165,7 @@ def process_item(
             height = float(max_row - min_row + 1)
 
             bounding_boxes.append({"x": x, "y": y, "width": width, "height": height})
+            box_data.append([mask_path.name, i, width * height])
 
         assert len(bounding_boxes) == unique_colors_count, "Mismatch in box count"
 
@@ -170,13 +173,9 @@ def process_item(
             json.dump({"boxes": bounding_boxes}, f)
 
     with timer(" - Saving class mask and patches"):
-        num_labels, labels, stats, centroids = cv2.connectedComponentsWithStats(
-            binary_mask
-        )
+        num_labels, labels, stats, _ = cv2.connectedComponentsWithStats(binary_mask)
 
         output = np.zeros_like(mask)
-
-        image = cv2.imread(str(image_path))
 
         for i in range(1, num_labels):
             component_mask = labels == i
@@ -226,7 +225,7 @@ def process_item(
                 filename = str(patches_path / f"0/{mask_path.stem}_{i}.png")
                 cv2.imwrite(filename, patch)
 
-    return metadata
+    return metadata, box_data
 
 
 def main():
@@ -237,7 +236,7 @@ def main():
         train_class_masks_path,
         train_patches_path,
         train_boxes_path,
-    ) = setup_directories("training_data")
+    ) = setup_directories(Path("training_data"))
     (
         test_images_path,
         test_masks_path,
@@ -245,7 +244,7 @@ def main():
         test_class_masks_path,
         test_patches_path,
         test_boxes_path,
-    ) = setup_directories("test_data")
+    ) = setup_directories(Path("test_data"))
 
     mask_paths = list(sorted(Path("data/labeled/masks").glob("*.png")))
 
@@ -266,10 +265,12 @@ def main():
 
     # Training data processing
     training_metadata = [["filename", "instance_count"]]
+    box_data = [["filename", "id", "area"]]
+
     for i, (image_path, mask_path) in enumerate(train_pairs):
         print("\nProcessing training pair", i + 1, "of", len(train_pairs))
 
-        metadata_chunk = process_item(
+        metadata_chunk, box_data_chunk = process_item(
             image_path,
             mask_path,
             train_images_path,
@@ -280,12 +281,17 @@ def main():
             train_boxes_path,
         )
         training_metadata.append(metadata_chunk)
+        box_data.extend(box_data_chunk)
 
     with open("training_data/metadata.csv", "w", newline="") as f:
         writer = csv.writer(f)
         writer.writerows(training_metadata)
 
-    print("\nMetadata saved to metadata.csv")
+    with open("training_data/box_data.csv", "w", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerows(box_data)
+
+    print("\nMetadata saved to metadata.csv and box_data.csv")
 
     # Test data processing
     test_metadata = [["filename", "instance_count"]]
@@ -308,7 +314,11 @@ def main():
         writer = csv.writer(f)
         writer.writerows(test_metadata)
 
-    print("\nMetadata saved to metadata.csv")
+    with open("test_data/box_data.csv", "w", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerows(box_data)
+
+    print("\nMetadata saved to metadata.csv and box_data.csv")
 
 
 if __name__ == "__main__":
