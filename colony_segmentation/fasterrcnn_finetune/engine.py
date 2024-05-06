@@ -87,19 +87,17 @@ def calculate_mae(actual, predicted):
 
 
 def calculate_smape(actual, predicted):
-    actual = np.array(actual)
-    predicted = np.array(predicted)
+    sum = 0
 
-    # Avoid division by zero; apply small epsilon where actual + predicted is zero
-    denominator = np.abs(actual) + np.abs(predicted)
-    # Smallest representable positive number such that 1.0 + eps != 1.0
-    epsilon = np.finfo(float).eps
-    # Avoid division by zero
-    safe_denominator = np.where(denominator == 0, epsilon, denominator)
+    for ac, pr in zip(actual, predicted):
+        denominator = np.abs(ac + pr)
 
-    smape = 1 / len(actual) * np.sum(np.abs(actual - predicted) / safe_denominator)
+        if denominator != 0:
+            sum += np.abs(ac - pr) / denominator
 
-    return smape
+    smape = 1 / len(actual) * sum
+
+    return float(smape)
 
 
 def _get_iou_types(model):
