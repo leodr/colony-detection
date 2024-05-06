@@ -145,3 +145,70 @@ def evaluate(model, data_loader, device):
     coco_evaluator.summarize()
     torch.set_num_threads(n_threads)
     return coco_evaluator, avg_absolute_error, avg_relative_error
+
+
+@torch.inference_mode()
+def evaluate_with_threshold(model, data_loader, device, threshold):
+    n_threads = torch.get_num_threads()
+    # FIXME remove this and make paste_masks_in_image run on the GPU
+    torch.set_num_threads(1)
+    cpu_device = torch.device("cpu")
+    model.eval()
+    metric_logger = utils.MetricLogger(delimiter="  ")
+    header = "Test:"
+
+    coco = get_coco_api_from_dataset(data_loader.dataset)
+    iou_types = _get_iou_types(model)
+    coco_evaluator = CocoEvaluator(coco, iou_types)
+
+    acc_absolute_error = 0
+    acc_relative_error = 0
+
+    for images, targets in metric_logger.log_every(data_loader, 100, header):
+        correct_counts = [target["labels"].sum() for target in targets]
+
+        images = list(img.to(device) for img in images)
+
+        if torch.cuda.is_available():
+            torch.cuda.synchronize()
+        model_time = time.time()
+        outputs = model(images)
+
+        outputs = [{k: v.to(cpu_device) for k, v in t.items()} for t in outputs]
+
+        for output in outputs:
+            # iterate over all dict keys in output and filter out the ones that are below the threshold
+            for key in output:
+                output[key] = output[key][output["scores"] > threshold]
+
+        model_time = time.time() - model_time
+
+        predicted_counts = [output["labels"].sum() for output in outputs]
+
+        for correct_count, predicted_count in zip(correct_counts, predicted_counts):
+            acc_absolute_error += abs(correct_count - predicted_count)
+            acc_relative_error += (
+                (abs(correct_count - predicted_count) / correct_count)
+                if correct_count > 0
+                else 1
+            )
+
+        res = {target["image_id"]: output for target, output in zip(targets, outputs)}
+        evaluator_time = time.time()
+        coco_evaluator.update(res)
+        evaluator_time = time.time() - evaluator_time
+        metric_logger.update(model_time=model_time, evaluator_time=evaluator_time)
+
+    avg_absolute_error = acc_absolute_error / len(data_loader.dataset)
+    avg_relative_error = acc_relative_error / len(data_loader.dataset)
+
+    # gather the stats from all processes
+    metric_logger.synchronize_between_processes()
+    print("Averaged stats:", metric_logger)
+    coco_evaluator.synchronize_between_processes()
+
+    # accumulate predictions from all images
+    coco_evaluator.accumulate()
+    coco_evaluator.summarize()
+    torch.set_num_threads(n_threads)
+    return coco_evaluator, avg_absolute_error, avg_relative_error
