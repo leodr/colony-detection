@@ -2,6 +2,7 @@ import math
 import sys
 import time
 
+import numpy as np
 import torch
 import torchvision.models.detection.mask_rcnn
 import utils
@@ -74,6 +75,33 @@ def train_one_epoch(
     return loss_list
 
 
+def calculate_mae(actual, predicted):
+    actual = np.array(actual)
+    predicted = np.array(predicted)
+
+    absolute_errors = np.abs(actual - predicted)
+
+    mae = np.mean(absolute_errors)
+
+    return mae
+
+
+def calculate_smape(actual, predicted):
+    actual = np.array(actual)
+    predicted = np.array(predicted)
+
+    # Avoid division by zero; apply small epsilon where actual + predicted is zero
+    denominator = np.abs(actual) + np.abs(predicted)
+    # Smallest representable positive number such that 1.0 + eps != 1.0
+    epsilon = np.finfo(float).eps
+    # Avoid division by zero
+    safe_denominator = np.where(denominator == 0, epsilon, denominator)
+
+    smape = 1 / len(actual) * np.sum(np.abs(actual - predicted) / safe_denominator)
+
+    return smape
+
+
 def _get_iou_types(model):
     model_without_ddp = model
     if isinstance(model, torch.nn.parallel.DistributedDataParallel):
@@ -100,8 +128,8 @@ def evaluate(model, data_loader, device):
     iou_types = _get_iou_types(model)
     coco_evaluator = CocoEvaluator(coco, iou_types)
 
-    acc_absolute_error = 0
-    acc_relative_error = 0
+    all_actual_counts = []
+    all_predicted_counts = []
 
     for images, targets in metric_logger.log_every(data_loader, 100, header):
         correct_counts = [target["labels"].sum() for target in targets]
@@ -118,13 +146,8 @@ def evaluate(model, data_loader, device):
 
         predicted_counts = [output["labels"].sum() for output in outputs]
 
-        for correct_count, predicted_count in zip(correct_counts, predicted_counts):
-            acc_absolute_error += abs(correct_count - predicted_count)
-            acc_relative_error += (
-                (abs(correct_count - predicted_count) / correct_count)
-                if correct_count > 0
-                else 1
-            )
+        all_actual_counts.extend(correct_counts)
+        all_predicted_counts.extend(predicted_counts)
 
         res = {target["image_id"]: output for target, output in zip(targets, outputs)}
         evaluator_time = time.time()
@@ -132,8 +155,8 @@ def evaluate(model, data_loader, device):
         evaluator_time = time.time() - evaluator_time
         metric_logger.update(model_time=model_time, evaluator_time=evaluator_time)
 
-    avg_absolute_error = acc_absolute_error / len(data_loader.dataset)
-    avg_relative_error = acc_relative_error / len(data_loader.dataset)
+    mae = calculate_mae(all_actual_counts, all_predicted_counts)
+    smape = calculate_smape(all_actual_counts, all_predicted_counts)
 
     # gather the stats from all processes
     metric_logger.synchronize_between_processes()
@@ -144,7 +167,7 @@ def evaluate(model, data_loader, device):
     coco_evaluator.accumulate()
     coco_evaluator.summarize()
     torch.set_num_threads(n_threads)
-    return coco_evaluator, avg_absolute_error, avg_relative_error
+    return coco_evaluator, mae, smape
 
 
 @torch.inference_mode()
@@ -161,8 +184,8 @@ def evaluate_with_threshold(model, data_loader, device, threshold):
     iou_types = _get_iou_types(model)
     coco_evaluator = CocoEvaluator(coco, iou_types)
 
-    acc_absolute_error = 0
-    acc_relative_error = 0
+    all_actual_counts = []
+    all_predicted_counts = []
 
     for images, targets in metric_logger.log_every(data_loader, 100, header):
         correct_counts = [target["labels"].sum() for target in targets]
@@ -185,13 +208,8 @@ def evaluate_with_threshold(model, data_loader, device, threshold):
 
         predicted_counts = [output["labels"].sum() for output in outputs]
 
-        for correct_count, predicted_count in zip(correct_counts, predicted_counts):
-            acc_absolute_error += abs(correct_count - predicted_count)
-            acc_relative_error += (
-                (abs(correct_count - predicted_count) / correct_count)
-                if correct_count > 0
-                else 1
-            )
+        all_actual_counts.extend(correct_counts)
+        all_predicted_counts.extend(predicted_counts)
 
         res = {target["image_id"]: output for target, output in zip(targets, outputs)}
         evaluator_time = time.time()
@@ -199,8 +217,8 @@ def evaluate_with_threshold(model, data_loader, device, threshold):
         evaluator_time = time.time() - evaluator_time
         metric_logger.update(model_time=model_time, evaluator_time=evaluator_time)
 
-    avg_absolute_error = acc_absolute_error / len(data_loader.dataset)
-    avg_relative_error = acc_relative_error / len(data_loader.dataset)
+    mae = calculate_mae(all_actual_counts, all_predicted_counts)
+    smape = calculate_smape(all_actual_counts, all_predicted_counts)
 
     # gather the stats from all processes
     metric_logger.synchronize_between_processes()
@@ -211,4 +229,4 @@ def evaluate_with_threshold(model, data_loader, device, threshold):
     coco_evaluator.accumulate()
     coco_evaluator.summarize()
     torch.set_num_threads(n_threads)
-    return coco_evaluator, avg_absolute_error, avg_relative_error
+    return coco_evaluator, mae, smape
