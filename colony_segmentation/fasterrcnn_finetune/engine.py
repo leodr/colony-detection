@@ -4,6 +4,7 @@ import time
 
 import numpy as np
 import torch
+import torch.nn as nn
 import torchvision.models.detection.mask_rcnn
 import utils
 from coco_eval import CocoEvaluator
@@ -11,7 +12,15 @@ from coco_utils import get_coco_api_from_dataset
 
 
 def train_one_epoch(
-    model, optimizer, data_loader, device, epoch, print_freq, scaler=None, optimize=True
+    model,
+    optimizer,
+    data_loader,
+    device,
+    epoch,
+    print_freq,
+    scaler=None,
+    optimize=True,
+    max_norm=None,
 ):
     model.train()
     metric_logger = utils.MetricLogger(delimiter="  ")
@@ -64,6 +73,10 @@ def train_one_epoch(
                 scaler.update()
             else:
                 losses.backward()
+
+                if max_norm is not None:
+                    nn.utils.clip_grad_norm_(model.parameters(), max_norm)
+
                 optimizer.step()
 
             if lr_scheduler is not None:
