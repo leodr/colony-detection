@@ -69,6 +69,11 @@ def train_one_epoch(
         if optimize:
             if scaler is not None:
                 scaler.scale(losses).backward()
+
+                if max_norm is not None:
+                    scaler.unscale_(optimizer)
+                    nn.utils.clip_grad_norm_(model.parameters(), max_norm)
+
                 scaler.step(optimizer)
                 scaler.update()
             else:
