@@ -1,32 +1,34 @@
 import json
 import os
+from typing import List
 
 import numpy as np
 import torch
+from dataset_transforms import get_transforms
 from torchvision import tv_tensors
 from torchvision.io import read_image
 from torchvision.transforms.v2 import functional as F
 
 
-class BoundingBoxDataset(torch.utils.data.Dataset):
+class AgarBBDataset(torch.utils.data.Dataset):
     num_classes = 2  # background and colony
 
-    def __init__(self, root, transforms):
+    def __init__(self, root: str, ids: List[str], is_train: bool):
         self.root = root
-        self.transforms = transforms
+        self.transforms = get_transforms(is_train, rotate=False)
 
-        # load all image files, sorting them to ensure that they are aligned
-        self.imgs = list(sorted(os.listdir(os.path.join(root, "images"))))
-        self.boxes = list(sorted(os.listdir(os.path.join(root, "boxes"))))
+        # load all image and boxes files, sorting them to ensure that they are aligned
+        self.imgs = list(sorted([f"{id}.jpg" for id in ids]))
+        self.boxes = list(sorted([f"{id}.json" for id in ids]))
 
     def __getitem__(self, idx):
-        img_path = os.path.join(self.root, "images", self.imgs[idx])
-        boxes_path = os.path.join(self.root, "boxes", self.boxes[idx])
+        img_path = os.path.join(self.root, self.imgs[idx])
+        boxes_path = os.path.join(self.root, self.boxes[idx])
         img = read_image(img_path)
         with open(boxes_path, "r") as f:
             boxes_json = json.load(f)
 
-        labels = boxes_json["boxes"]
+        labels = boxes_json["labels"]
 
         boxes = np.zeros((len(labels), 4), dtype=np.float32)
         area = np.zeros((len(labels)), dtype=np.float32)
@@ -55,8 +57,7 @@ class BoundingBoxDataset(torch.utils.data.Dataset):
             "area": area,
         }
 
-        if self.transforms is not None:
-            img, target = self.transforms(img, target)
+        img, target = self.transforms(img, target)
 
         return img, target
 

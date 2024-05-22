@@ -4,3 +4,7 @@ fastrcnn_finetune.py
 # Training results
 *.csv
 *.txt
+
+# Model files and logs
+artifacts/
+runs/
