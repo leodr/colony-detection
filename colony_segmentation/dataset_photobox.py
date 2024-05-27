@@ -41,7 +41,7 @@ class PhotoboxBBDataset(torch.utils.data.Dataset):
         if self.patch_augmentation:
             self.patch_imgs = list(
                 sorted(
-                    os.listdir("../../synthetic_data_generation/patched_images/correct")
+                    os.listdir("../inpaint_data_augmentation/patched_images/correct")
                 )
             )
             self.patch_imgs_args = [
@@ -84,7 +84,7 @@ class PhotoboxBBDataset(torch.utils.data.Dataset):
                 id, x, y, radius = used_patch
 
                 patch_path = os.path.join(
-                    "../../synthetic_data_generation/patched_images/correct",
+                    "../inpaint_data_augmentation/patched_images/correct",
                     f"{id}_{x}_{y}_{radius}.jpg",
                 )
 
