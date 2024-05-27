@@ -2,10 +2,8 @@ import csv
 import json
 import random
 import time
-from collections import defaultdict
 from contextlib import contextmanager
 from pathlib import Path
-from shutil import copy2
 
 import cv2
 import numpy as np
@@ -228,97 +226,63 @@ def process_item(
     return metadata, box_data
 
 
-def main():
+def create_split(name, ids):
     (
-        train_images_path,
-        train_masks_path,
-        train_binary_masks_path,
-        train_class_masks_path,
-        train_patches_path,
-        train_boxes_path,
-    ) = setup_directories(Path("training_data"))
-    (
-        test_images_path,
-        test_masks_path,
-        test_binary_masks_path,
-        test_class_masks_path,
-        test_patches_path,
-        test_boxes_path,
-    ) = setup_directories(Path("test_data"))
-
-    mask_paths = list(sorted(Path("data/labeled/masks").glob("*.png")))
-
-    pairs = [
-        (Path(f"data/labeled/images/{mask_path.stem}.jpg"), mask_path)
-        for mask_path in mask_paths
-    ]
-
-    random.seed(42)
-    random.shuffle(pairs)
-    num_test = int(len(pairs) * 0.2)
-    test_pairs = pairs[:num_test]
-    train_pairs = pairs[num_test:]
-
-    print(f"Found {len(pairs)} pairs of images and masks.")
-    print(f"Training pairs: {len(train_pairs)}")
-    print(f"Test pairs: {len(test_pairs)}")
+        images_path,
+        masks_path,
+        binary_masks_path,
+        class_masks_path,
+        patches_path,
+        boxes_path,
+    ) = setup_directories(Path(name))
 
     # Training data processing
-    training_metadata = [["filename", "instance_count"]]
+    count_data = [["filename", "instance_count"]]
     box_data = [["filename", "id", "area"]]
 
-    for i, (image_path, mask_path) in enumerate(train_pairs):
-        print("\nProcessing training pair", i + 1, "of", len(train_pairs))
+    for i, id in enumerate(ids):
+        print(f"\nProcessing {name} pair {i + 1} of {len(ids)}")
+
+        image_path = Path(f"./data/labeled/images/{id}.jpg")
+        mask_path = Path(f"./data/labeled/masks/{id}.png")
 
         metadata_chunk, box_data_chunk = process_item(
             image_path,
             mask_path,
-            train_images_path,
-            train_masks_path,
-            train_binary_masks_path,
-            train_class_masks_path,
-            train_patches_path,
-            train_boxes_path,
+            images_path,
+            masks_path,
+            binary_masks_path,
+            class_masks_path,
+            patches_path,
+            boxes_path,
         )
-        training_metadata.append(metadata_chunk)
+        count_data.append(metadata_chunk)
         box_data.extend(box_data_chunk)
 
-    with open("training_data/metadata.csv", "w", newline="") as f:
+    with open(f"{name}/metadata.csv", "w", newline="") as f:
         writer = csv.writer(f)
-        writer.writerows(training_metadata)
+        writer.writerows(count_data)
 
-    with open("training_data/box_data.csv", "w", newline="") as f:
-        writer = csv.writer(f)
-        writer.writerows(box_data)
-
-    print("\nMetadata saved to metadata.csv and box_data.csv")
-
-    # Test data processing
-    test_metadata = [["filename", "instance_count"]]
-    for i, (image_path, mask_path) in enumerate(test_pairs):
-        print("\nProcessing test pair", i + 1, "of", len(test_pairs))
-
-        metadata_chunk = process_item(
-            image_path,
-            mask_path,
-            test_images_path,
-            test_masks_path,
-            test_binary_masks_path,
-            test_class_masks_path,
-            test_patches_path,
-            test_boxes_path,
-        )
-        test_metadata.append(metadata_chunk)
-
-    with open("test_data/metadata.csv", "w", newline="") as f:
-        writer = csv.writer(f)
-        writer.writerows(test_metadata)
-
-    with open("test_data/box_data.csv", "w", newline="") as f:
+    with open(f"{name}/box_data.csv", "w", newline="") as f:
         writer = csv.writer(f)
         writer.writerows(box_data)
 
-    print("\nMetadata saved to metadata.csv and box_data.csv")
+    print(f"\nMetadata saved to {name}/metadata.csv and {name}/box_data.csv")
+
+
+def main():
+    with open("data/labeled/splits.json") as f:
+        splits = json.load(f)
+
+    train_list = splits["train"]
+    val_list = splits["val"]
+    test_list = splits["test"]
+
+    print(f"Split: Train {len(train_list)}, Val {len(val_list)}, Test {len(test_list)}")
+
+    create_split("train_data", train_list)
+    create_split("val_data", val_list)
+    create_split("test_data", test_list)
 
 
 if __name__ == "__main__":

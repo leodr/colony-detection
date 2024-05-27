@@ -187,7 +187,8 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
-training_data/
+train_data/
+val_data/
 test_data/
 
 # Downloaded model files
