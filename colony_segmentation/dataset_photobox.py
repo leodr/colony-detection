@@ -29,9 +29,16 @@ def get_filename_components(filename: str) -> tuple[str, int, int, int]:
 class PhotoboxBBDataset(torch.utils.data.Dataset):
     num_classes = 2  # background and colony
 
-    def __init__(self, root: str, is_train: bool, patch_augmentation: bool = False):
+    def __init__(
+        self,
+        root: str,
+        is_train: bool,
+        rotate_augmentation: bool = True,
+        patch_augmentation: bool = False,
+    ):
         self.root = root
-        self.transforms = get_transforms(is_train, rotate=True)
+        self.transforms = get_transforms(is_train, rotate=rotate_augmentation)
+
         self.patch_augmentation = patch_augmentation
 
         # load all image files, sorting them to ensure that they are aligned
