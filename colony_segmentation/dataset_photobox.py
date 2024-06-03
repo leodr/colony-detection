@@ -108,7 +108,7 @@ class PhotoboxBBDataset(torch.utils.data.Dataset):
             labels = [
                 box
                 for box in labels
-                if (replacement_mask[box["center_x"], box["center_y"]] == 0)
+                if (replacement_mask[box["center_y"], box["center_x"]] == 0)
             ]
 
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
@@ -153,20 +153,33 @@ class PhotoboxBBDataset(torch.utils.data.Dataset):
 # %% Preview of dataset
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
+    import torchvision.utils as utils
+    from torchvision import transforms
 
     dataset = PhotoboxBBDataset(
         root="../train_data",
         is_train=True,
-        rotate_augmentation=True,
-        patch_augmentation=False,
+        rotate_augmentation=False,
+        patch_augmentation=True,
     )
 
     random_ids = np.random.choice(len(dataset), 4)
 
     for idx in random_ids:
-        img = F.to_pil_image(dataset[idx][0])
+        img, target = dataset[idx]
 
-        # show image
+        img = transforms.ToPILImage()(img)
+
+        boxes = target["boxes"].numpy()
+        labels = target["labels"].numpy()
+
+        img = np.array(img)
+
+        for box in boxes:
+            x1, y1, x2, y2 = box
+            cv2.rectangle(img, (int(x1), int(y1)), (int(x2), int(y2)), (255, 0, 0), 2)
+
+        plt.figure(figsize=(10, 10))
         plt.imshow(img)
         plt.axis("off")
         plt.show()
