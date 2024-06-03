@@ -1,25 +1,14 @@
-# Remove old script
-rm -f fastrcnn_finetune.py
-
-# Convert notebook to regular python script
-jupyter nbconvert --to script fastrcnn_finetune.ipynb
-
-# Remove old log file
-rm -f output.log
-
-# Add environment variables
-export CUDA_DEVICE="cuda:0"
-export EXP_LEARNING_RATE="0.001"
-export EXP_USE_COCO_PRETRAINED="1"
-export EXP_USE_AGAR_PRETRAINING="1"
-export EXP_NUM_EPOCHS_AGAR="20"
-export EXP_NUM_EPOCHS_PHOTOBOX="200"
-export EXP_USE_ROTATION_AUGMENTATION="1"
-export EXP_USE_PATCH_AUGMENTATION="0"
-export EXP_MAX_NORM="1"
-
 # Start training script in background
-nohup python -u fastrcnn_finetune.py > output.log 2>&1 &
+nohup python -u train.py \
+  --learning_rate 0.005 \
+  --use_coco_pretrained 0 \
+  --use_agar_pretraining 0 \
+  --num_epochs_agar 20 \
+  --num_epochs_photobox 1000 \
+  --use_rotation_augmentation 0 \
+  --use_patch_augmentation 0 \
+  --max_norm -1 \
+  > output.log 2>&1 &
 
 sleep 2
 
