@@ -1,3 +1,4 @@
+# %%
 import json
 import os
 import re
@@ -147,3 +148,27 @@ class PhotoboxBBDataset(torch.utils.data.Dataset):
 
     def __len__(self):
         return len(self.imgs)
+
+
+# %% Preview of dataset
+if __name__ == "__main__":
+    import matplotlib.pyplot as plt
+
+    dataset = PhotoboxBBDataset(
+        root="../train_data",
+        is_train=True,
+        rotate_augmentation=True,
+        patch_augmentation=False,
+    )
+
+    random_ids = np.random.choice(len(dataset), 4)
+
+    for idx in random_ids:
+        img = F.to_pil_image(dataset[idx][0])
+
+        # show image
+        plt.imshow(img)
+        plt.axis("off")
+        plt.show()
+
+# %%
