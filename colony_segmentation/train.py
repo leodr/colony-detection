@@ -306,7 +306,7 @@ def main(device: str, exp_params: ExperimentParameters):
             exp_params,
         )
 
-        trainer.train(exp_params.num_epochs_agar)
+        trainer.train()
 
     print("Training on Photobox dataset\n" + "-" * 10 + "\n")
 
@@ -356,7 +356,7 @@ def main(device: str, exp_params: ExperimentParameters):
     with open(f"artifacts/{start_time_str}/params.json", "w") as f:
         json.dump(exp_params.__dict__, f, indent=4)
 
-    trainer.train(exp_params.num_epochs_photobox)
+    trainer.train()
 
     send_discord_notification(
         f"{os.uname().nodename} {device} finished training.",
