@@ -9,7 +9,6 @@ import torch
 from dataset_transforms import get_transforms
 from PIL import Image
 from torchvision import tv_tensors
-from torchvision.io import read_image
 from torchvision.transforms.v2 import functional as F
 
 
@@ -154,12 +153,11 @@ class PhotoboxBBDataset(torch.utils.data.Dataset):
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
     import torchvision.utils as utils
-    from torchvision import transforms
 
     dataset = PhotoboxBBDataset(
         root="../train_data",
         is_train=True,
-        rotate_augmentation=False,
+        rotate_augmentation=True,
         patch_augmentation=True,
     )
 
@@ -168,19 +166,16 @@ if __name__ == "__main__":
     for idx in random_ids:
         img, target = dataset[idx]
 
-        img = transforms.ToPILImage()(img)
+        img = img * 255
+        img = img.to(torch.uint8)
 
-        boxes = target["boxes"].numpy()
-        labels = target["labels"].numpy()
-
-        img = np.array(img)
-
-        for box in boxes:
-            x1, y1, x2, y2 = box
-            cv2.rectangle(img, (int(x1), int(y1)), (int(x2), int(y2)), (255, 0, 0), 2)
+        boxes_drawn = utils.draw_bounding_boxes(
+            img, target["boxes"], width=3, colors="red"
+        )
+        boxes_drawn = F.to_pil_image(boxes_drawn)
 
         plt.figure(figsize=(10, 10))
-        plt.imshow(img)
+        plt.imshow(boxes_drawn)
         plt.axis("off")
         plt.show()
 
