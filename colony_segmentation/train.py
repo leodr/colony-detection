@@ -17,8 +17,8 @@ class ExperimentParameters:
         learning_rate: float,
         use_coco_pretrained: bool,
         use_agar_pretraining: bool,
-        num_epochs_agar: int,
-        num_epochs_photobox: int,
+        patience_agar: int,
+        patience_photobox: int,
         use_rotation_augmentation: bool,
         use_patch_augmentation: bool,
         max_norm: Optional[float],
@@ -26,8 +26,8 @@ class ExperimentParameters:
         self.learning_rate = learning_rate
         self.use_coco_pretrained = use_coco_pretrained
         self.use_agar_pretraining = use_agar_pretraining
-        self.num_epochs_agar = num_epochs_agar
-        self.num_epochs_photobox = num_epochs_photobox
+        self.patience_agar = patience_agar
+        self.patience_photobox = patience_photobox
         self.use_rotation_augmentation = use_rotation_augmentation
         self.use_patch_augmentation = use_patch_augmentation
         self.max_norm = max_norm
@@ -132,7 +132,8 @@ class Trainer:
                     self.lr_scheduler.step(avg_val_loss_dict["total"])
 
                     last_lr = self.lr_scheduler.get_last_lr()[0]
-                    min_lr = self.exp_params.learning_rate / 1000 / 2
+                    # Let the learning rate decay two times (10%, 1%), then stop.
+                    min_lr = self.exp_params.learning_rate * 0.005
 
                     self.writer.add_scalar("lr", last_lr, epoch)
 
@@ -289,7 +290,7 @@ def main(device: str, exp_params: ExperimentParameters):
         optimizer = SGD(
             params, lr=exp_params.learning_rate, weight_decay=0.0005, momentum=0.9
         )
-        lr_scheduler = ReduceLROnPlateau(optimizer)
+        lr_scheduler = ReduceLROnPlateau(optimizer, patience=exp_params.patience_agar)
 
         writer = SummaryWriter(f"runs/{start_time_str}/agar")
         agar_model_path = f"artifacts/{start_time_str}/agar.pth"
@@ -337,7 +338,7 @@ def main(device: str, exp_params: ExperimentParameters):
     optimizer = SGD(
         params, lr=exp_params.learning_rate, weight_decay=0.0005, momentum=0.9
     )
-    lr_scheduler = ReduceLROnPlateau(optimizer)
+    lr_scheduler = ReduceLROnPlateau(optimizer, patience=exp_params.patience_photobox)
 
     writer = SummaryWriter(f"runs/{start_time_str}/final")
 
@@ -376,8 +377,8 @@ if __name__ == "__main__":
     parser.add_argument('--learning_rate', type=float, default=0.005, help='Learning rate for the experiment')
     parser.add_argument('--use_coco_pretrained', type=int, default=False, help='Use COCO pretrained model')
     parser.add_argument('--use_agar_pretraining', type=int, default=False, help='Use AGAR pretraining')
-    parser.add_argument('--num_epochs_agar', type=int, default=20, help='Number of epochs for AGAR')
-    parser.add_argument('--num_epochs_photobox', type=int, default=150, help='Number of epochs for Photobox')
+    parser.add_argument('--patience_agar', type=int, default=3, help='Patience for AGAR training')
+    parser.add_argument('--patience_photobox', type=int, default=10, help='Patience for Photobox training')
     parser.add_argument('--use_rotation_augmentation', type=int, default=False, help='Use rotation augmentation')
     parser.add_argument('--use_patch_augmentation', type=int, default=False, help='Use patch augmentation')
     parser.add_argument('--max_norm', type=float, default=-1, help='Max norm for gradients')
@@ -389,8 +390,8 @@ if __name__ == "__main__":
         learning_rate=parsed_args.learning_rate,
         use_coco_pretrained=bool(parsed_args.use_coco_pretrained),
         use_agar_pretraining=bool(parsed_args.use_agar_pretraining),
-        num_epochs_agar=parsed_args.num_epochs_agar,
-        num_epochs_photobox=parsed_args.num_epochs_photobox,
+        patience_agar=parsed_args.patience_agar,
+        patience_photobox=parsed_args.patience_photobox,
         use_rotation_augmentation=bool(parsed_args.use_rotation_augmentation),
         use_patch_augmentation=bool(parsed_args.use_patch_augmentation),
         max_norm=None if parsed_args.max_norm < 0 else parsed_args.max_norm,

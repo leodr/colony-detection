@@ -3,8 +3,8 @@ nohup python -u train.py \
   --learning_rate 0.005 \
   --use_coco_pretrained 0 \
   --use_agar_pretraining 0 \
-  --num_epochs_agar 20 \
-  --num_epochs_photobox 1000 \
+  --patience_agar 3 \
+  --patience_photobox 10 \
   --use_rotation_augmentation 0 \
   --use_patch_augmentation 0 \
   --max_norm -1 \
