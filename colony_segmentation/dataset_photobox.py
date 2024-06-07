@@ -1,3 +1,4 @@
+# %%
 import json
 import os
 import re
@@ -8,7 +9,6 @@ import torch
 from dataset_transforms import get_transforms
 from PIL import Image
 from torchvision import tv_tensors
-from torchvision.io import read_image
 from torchvision.transforms.v2 import functional as F
 
 
@@ -29,9 +29,16 @@ def get_filename_components(filename: str) -> tuple[str, int, int, int]:
 class PhotoboxBBDataset(torch.utils.data.Dataset):
     num_classes = 2  # background and colony
 
-    def __init__(self, root: str, is_train: bool, patch_augmentation: bool = False):
+    def __init__(
+        self,
+        root: str,
+        is_train: bool,
+        rotate_augmentation: bool = True,
+        patch_augmentation: bool = False,
+    ):
         self.root = root
-        self.transforms = get_transforms(is_train, rotate=True)
+        self.transforms = get_transforms(is_train, rotate=rotate_augmentation)
+
         self.patch_augmentation = patch_augmentation
 
         # load all image files, sorting them to ensure that they are aligned
@@ -100,7 +107,7 @@ class PhotoboxBBDataset(torch.utils.data.Dataset):
             labels = [
                 box
                 for box in labels
-                if (replacement_mask[box["center_x"], box["center_y"]] == 0)
+                if (replacement_mask[box["center_y"], box["center_x"]] == 0)
             ]
 
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
@@ -140,3 +147,36 @@ class PhotoboxBBDataset(torch.utils.data.Dataset):
 
     def __len__(self):
         return len(self.imgs)
+
+
+# %% Preview of dataset
+if __name__ == "__main__":
+    import matplotlib.pyplot as plt
+    import torchvision.utils as utils
+
+    dataset = PhotoboxBBDataset(
+        root="../train_data",
+        is_train=True,
+        rotate_augmentation=True,
+        patch_augmentation=True,
+    )
+
+    random_ids = np.random.choice(len(dataset), 4)
+
+    for idx in random_ids:
+        img, target = dataset[idx]
+
+        img = img * 255
+        img = img.to(torch.uint8)
+
+        boxes_drawn = utils.draw_bounding_boxes(
+            img, target["boxes"], width=3, colors="red"
+        )
+        boxes_drawn = F.to_pil_image(boxes_drawn)
+
+        plt.figure(figsize=(10, 10))
+        plt.imshow(boxes_drawn)
+        plt.axis("off")
+        plt.show()
+
+# %%

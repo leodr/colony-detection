@@ -28,7 +28,7 @@ def train_one_epoch(
     header = f"Epoch: [{epoch}]"
 
     lr_scheduler = None
-    if epoch == 0:
+    if epoch == 0 and optimize:
         warmup_factor = 1.0 / 1000
         warmup_iters = min(1000, len(data_loader) - 1)
 

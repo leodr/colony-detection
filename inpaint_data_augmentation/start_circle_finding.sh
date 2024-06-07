@@ -1,14 +1,14 @@
 # Remove old script
-rm circle_finding.py
+rm -f find_inpaint_circles.py
 
 # Convert notebook to regular python script
-jupyter nbconvert --to script circle_finding.ipynb
+jupyter nbconvert --to script find_inpaint_circles.ipynb
 
 # Remove old log file
-rm output.log
+rm -f output.log
 
 # Start training script in background
-nohup python -u circle_finding.py > output.log 2>&1 &
+nohup python -u find_inpaint_circles.py > output.log 2>&1 &
 
 # Follow the output log
 tail -f output.log

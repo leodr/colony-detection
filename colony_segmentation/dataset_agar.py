@@ -1,3 +1,4 @@
+# %%
 import json
 import os
 from typing import List
@@ -63,3 +64,42 @@ class AgarBBDataset(torch.utils.data.Dataset):
 
     def __len__(self):
         return len(self.imgs)
+
+
+# %% Preview of dataset
+if __name__ == "__main__":
+    import json
+
+    import cv2
+    import matplotlib.pyplot as plt
+    import torchvision.utils as utils
+    from torchvision import transforms
+
+    with open("../AGAR_dataset/training_lists/higher_resolution_train.txt", "r") as f:
+        ids = json.load(f)
+
+    dataset = AgarBBDataset(
+        root="../AGAR_dataset/dataset",
+        ids=ids,
+        is_train=True,
+    )
+
+    random_ids = np.random.choice(len(dataset), 4)
+
+    for idx in random_ids:
+        img, target = dataset[idx]
+
+        img = img * 255
+        img = img.to(torch.uint8)
+
+        boxes_drawn = utils.draw_bounding_boxes(
+            img, target["boxes"], width=3, colors="red"
+        )
+        boxes_drawn = F.to_pil_image(boxes_drawn)
+
+        plt.figure(figsize=(10, 10))
+        plt.imshow(boxes_drawn)
+        plt.axis("off")
+        plt.show()
+
+# %%
