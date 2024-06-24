@@ -204,3 +204,6 @@ AGAR_dataset/
 # Generated charts
 **/chart_*.png
 **/chart_*.jpg
+
+# Example images from COCO
+coco_examples/
