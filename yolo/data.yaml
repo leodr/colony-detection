@@ -1,0 +1,7 @@
+path: photobox_yolo
+train: images/train
+val: images/val
+test: images/test
+
+nc: 1  # number of classes
+names: ['colony']  # class names
