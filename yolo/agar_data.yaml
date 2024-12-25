@@ -1,0 +1,6 @@
+path: agar_yolo
+train: images/train
+val: images/val
+
+nc: 1 # number of classes
+names: ["colony"] # class names
