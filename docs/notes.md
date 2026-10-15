@@ -3,8 +3,6 @@
 ## Titel  
 Automating Bacterial Colony Segmentation with Deep Learning  
   
-[]()  
-  
 Synthetische Daten?  
   
 DBLP für Literatur  
