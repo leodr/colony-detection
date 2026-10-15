@@ -1,0 +1,89 @@
+% Presentation 1, ported from PowerPoint (default Office theme, 16:9).
+% Positions and sizes are taken from the .pptx in centimetres.
+% Compile with LuaLaTeX: latexmk -lualatex presentation_1.tex
+\documentclass{beamer}
+
+\geometry{paperwidth=33.867cm, paperheight=19.05cm}
+\usepackage[ngerman]{babel}
+\usepackage{fontspec}
+\usepackage{tikz}
+
+% Carlito is metrically compatible with Calibri, the theme font of the original
+\setsansfont{Carlito}
+\hyphenpenalty=10000
+\exhyphenpenalty=10000
+\setbeamertemplate{navigation symbols}{}
+\setbeamertemplate{background canvas}[default]
+\setbeamercolor{background canvas}{bg=white}
+\setbeamercolor{normal text}{fg=black}
+
+% Beamer's ragged-right setting fixes the word space at 3.65 pt (meant for 11 pt text);
+% use the font's own space width (still without stretch, so the text stays ragged right)
+\newcommand{\resetspacing}{\spaceskip=\fontdimen2\font\relax}
+
+% Text box at (x, y) with width w and height h in cm, as in PowerPoint (origin top left).
+% PowerPoint insets text by 0.254 cm left/right and 0.127 cm top/bottom.
+\newcommand{\titlebox}[6][44]{% [font size] {x}{y}{w}{h}{text}
+  \node[anchor=west, inner sep=0pt, text width=#4cm-0.508cm, align=left]
+    at ([xshift=#2cm+0.254cm, yshift=-#3cm-#5cm/2]current page.north west)
+    {\fontsize{#1}{\fpeval{#1*0.9}}\selectfont\resetspacing #6};}
+\newcommand{\bodybox}[5]{% {x}{y}{w}{h}{items}
+  \node[anchor=north west, inner sep=0pt, text width=#3cm-0.508cm]
+    at ([xshift=#1cm+0.254cm, yshift=-#2cm-0.127cm]current page.north west)
+    {\raggedright\fontsize{28}{25.2}\selectfont\resetspacing #5};}
+\newcommand{\slideimage}[5]{% {x}{y}{w}{h}{file}
+  \node[anchor=north west, inner sep=0pt]
+    at ([xshift=#1cm, yshift=-#2cm]current page.north west)
+    {\includegraphics[width=#3cm, height=#4cm]{#5}};}
+% Bullet list in the Office style: 0.635 cm hanging indent, 10 pt between items
+\newenvironment{bullets}
+  {\begin{list}{•}{\setlength{\leftmargin}{0.635cm}\setlength{\labelwidth}{0.635cm}\setlength{\labelsep}{0pt}%
+    \setlength{\itemsep}{10pt}\setlength{\parsep}{0pt}\setlength{\topsep}{0pt}%
+    \renewcommand{\makelabel}[1]{##1\hfill}}}
+  {\end{list}}
+
+\begin{document}
+
+\begin{frame}[plain]\begin{tikzpicture}[remember picture, overlay]
+  \titlebox{2.3}{1.0}{29.2}{3.7}{Datenlage}
+  \bodybox{2.3}{5.1}{29.2}{12.1}{%
+    \begin{bullets}
+      \item 400 verschiedene Bilder, 200 ausgezählt (aktuell)
+      \item Bilder gibt es erstmal nicht so viele neue, aber es wird weiter ausgezählt
+    \end{bullets}}
+\end{tikzpicture}\end{frame}
+
+\begin{frame}[plain]\begin{tikzpicture}[remember picture, overlay]
+  \titlebox[28]{3.0}{1.0}{29.2}{3.7}{Verschiedene Formen…}
+  \slideimage{3.3}{3.6}{12.1}{12.1}{images/plate_a.jpg}
+  \slideimage{16.2}{3.6}{12.1}{12.1}{images/plate_b.jpg}
+  \titlebox[28]{3.0}{15.1}{29.2}{3.7}{Algorithmische Erstellung von Trainingsdaten schwierig!}
+\end{tikzpicture}\end{frame}
+
+\begin{frame}[plain]\begin{tikzpicture}[remember picture, overlay]
+  \titlebox{2.3}{7.7}{29.2}{3.7}{Trainingsdaten manuell erstellen, aber so einfach wie möglich}
+\end{tikzpicture}\end{frame}
+
+\begin{frame}[plain]\begin{tikzpicture}[remember picture, overlay]
+  \titlebox{2.3}{1.0}{29.2}{3.7}{“Counter”-App zum Auszählen \& Labeln}
+  \slideimage{9.2}{5.1}{15.4}{12.1}{images/counter_app.png}
+\end{tikzpicture}\end{frame}
+
+\begin{frame}[plain]\begin{tikzpicture}[remember picture, overlay]
+  \titlebox{2.3}{1.0}{29.2}{3.7}{Bestmögliche Daten}
+  \slideimage{3.2}{5.1}{12.1}{12.1}{images/binary_mask.png}
+  \slideimage{18.3}{5.1}{12.1}{12.1}{images/instance_mask.png}
+\end{tikzpicture}\end{frame}
+
+\begin{frame}[plain]\begin{tikzpicture}[remember picture, overlay]
+  \titlebox{2.3}{1.0}{29.2}{3.7}{Fragen}
+  \bodybox{2.3}{5.1}{29.2}{12.1}{%
+    \begin{bullets}
+      \item Architektur? Object Detection / Instance Segmentation
+      \item Größe Dataset
+      \item Image Patching
+      \item Ziel für Bachelorarbeit (Accuracy beim Zählen, …)?
+    \end{bullets}}
+\end{tikzpicture}\end{frame}
+
+\end{document}
