@@ -204,6 +204,9 @@ AGAR_dataset/
 # Generated charts
 **/chart_*.png
 **/chart_*.jpg
+# The thesis charts are part of the thesis sources
+!docs/thesis/assets/chart_*.png
+!docs/thesis/assets/chart_*.jpg
 
 # Example images from COCO
 coco_examples/
