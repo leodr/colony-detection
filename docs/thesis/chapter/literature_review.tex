@@ -1,0 +1,31 @@
+%!TEX root = ../thesis.tex
+\chapter{Literature Review}
+\label{ch:literature_review}
+
+There are several different works on using deep learning to assist in bacterial colony counting and detection.
+
+\citet{ferrari2015bacterial} combine traditional algorithm based colony segmentation with a convolutional neural network to count the number of colonies contained in the segmented confluent agglomerates. The CNN is trained on 17,000 images of agglomerates from their manually labeled dataset and classifies each image into having 1-6 colonies or being an outlier. It boasts an accuracy of 92.8\% and beats other traditional segmentation approaches like the watershed transform.
+
+\citet{Makrai2023} introduce a bacterial colony detection dataset. It comprises 369 images with a total of 56,865 colonies. The focus is on diversity, with 24 different species being included in the images. Three different mobile phones are used to capture the images, on a mix of light and dark backgrounds. The images are labeled and curated by experts with a PhD in bacteriology using the COCO Annotator tool.
+
+\citet{majchrowska2021agar} introduce the Annotated Germs for Automated Recognition dataset, AGAR for short. AGAR is a the first publicly available large-scale dataset for microbial colony detection, featuring a total of 18,000 images from 5 different microorganisms and various configurations. The images show full petri dishes in contrast to the images from \citet{ferrari2015bacterial} that show only image segments. This allows them to train end-to-end object detection models on the dataset, which don't rely on feature extraction from computer vision algorithms.
+
+They train Faster R-CNN and Cascade R-CNN models on the dataset, while trying out different backbones. For the high-resolution subset of 6,990 images, Cascade R-CNN with an HRNet backbone performs best, if only by a small margin, with a mean Average Precision of 52.0\% (mAP@.5:.95:.05) and a mean absolute error of 4.31 for the colony counting task.
+
+\citet{whipp2022yolo} use a subset of the AGAR dataset, specifically the 1,240 images containing the S. Aureus bacteria, to train and evaluate models from the YOLO family. YOLO is a family of object detection models that are single-shot detectors, i.e. they treat object detection as a single-pass regression problem. From the YOLOv5 family, 4 different model sizes are evaluated. Results show that performance only differs by a small amount for the different sizes. Different resolutions are also evaluated, with the highest (1920x1920 px) offering slightly better detection for a larger cost in efficiency. The best results obtained were an mAP@.5:.95:.05 of 66.1\% and a recall of 97.7\% at an IoU of 0.5. Counting metrics are not reported.
+
+\citet{Majchrowska_2022} compare different object detection architectures for both efficiency and performance on the AGAR dataset. They evaluate two-stage (Faster R-CNN, Cascade R-CNN, Libra R-CNN, CBNet v2), one-stage (YOLOv4, EfficientDet-D2) and transformer architectures (Deformable DETR, Faster R-CNN with XCiT backbone), all with pre-trained backbones. 
+
+While detection performance does not differ much between architectures, YOLOv4 performs the best with an mAP@.5:.95:.05 of 52.9\% and a mean absolute counting error of 4.18. It also has the best inference efficiency, being at least twice as fast compared to the other architectures. Transformer architectures perform generally worse than the other detectors.
+
+\citet{app131910568} also work with the AGAR dataset, but using a subset of only 100 images, which are augmented via style transfer to obtain more than 4,000 image patches of 512x512 px resolution. They then use a novel backbone, the Shifted Window (Swin) Transformer, in combination with Cascade R-CNN to get an improved performance of 61.4\% mAP@.5:.95:.05, 2.2\% more than Cascade R-CNN with HRNet backbone.
+
+They also try a pre-trained YOLOv8x model on their created dataset, which reaches a 76.7\% mAP showing very good detection performance on the dataset.
+
+\citet{biology11020156} propose a novel data augmentation approach, which they use to generate a dataset of 970 petri dish images from a base of only 5 annotated images. They use a Random Cover Target Algorithm to mask colonies out from the images by filling the area with pixels of the background color. They train various Tiny YOLOv3 and Improved YOLOv3 models on this dataset, optimized for deployment on an edge device.
+
+After evaluation on a test set of 60 independent images, the models obtain 98.8\% precision and a recall of 98.5\%. They show that a small number of labeled images can be sufficient to train a reliable detection system for images of a specific style.
+
+\citet{Pawowski2022Generation} use deep learning style transfer based on VGG19 to create a synthetic dataset from 100 base images. To generate new images, segmented colonies are placed on images of empty dishes. Then the stylizing adjusts these patchwork images to match the style of real data. 
+
+They compare the performance of Faster R-CNN and Cascade R-CNN for training on the AGAR high-resolution dataset vs. their synthetic dataset. Without the stylization process, only a 20.1\% mAP@.5:.95:.05 is reached with significant counting error. Stylization brings the mAP to 41.5\% (compared to 52\% for the 70x larger AGAR dataset) and mean absolute counting error to 4.49 (compared to 4.31 for AGAR). They show that performance of larger datasets can almost be matched by synthesizing a dataset with neural style transfer from a small number of images.

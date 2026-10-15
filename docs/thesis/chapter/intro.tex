@@ -1,0 +1,13 @@
+%!TEX root = ../thesis.tex
+\chapter{Introduction}
+\label{ch:intro}
+
+Growing and analyzing bacterial colonies on Petri dishes is a core part of modern microbiology. It is used to quantify microbial populations present in a given sample, such as Salmonella in food or E. coli in water.
+
+The process includes spreading a small sample onto nutrient-rich gel inside a petri dish, such as MRS agar, and then leaving the bacteria to grow for a couple of days. After that time, visible colonies of bacteria will show. They can then be counted to infer the approximate amount of bacteria present in the initial sample.
+
+Analyzing these petri dishes is however a time consuming process. The number of colonies on a plate ranges anywhere from zero to hundreds of colonies, in some cases even thousands. Currently at FH Münster and many other microbiology labs, they are mostly counted manually, which often takes multiple minutes per plate.
+
+The goal of this thesis is to prove that deep learning can help with the analysis of petri dishes by detecting colonies on images of plates. It also lays the foundation for future work to improve upon the techniques proposed here to fully automate the process. Since labeling images by hand is slow and expensive, this work also explores how to get the best performance for a limited dataset size.
+
+The objective is purposely set on \textit{detecting} colonies. This means the model should be able to locate colonies and their bounding boxes on the plate. This opens up possibilities for analyzing individual colonies, such as for classification. Therefore methods that are only capable of counting colonies, but not reason about their location and size on the image, were not taken into consideration here.

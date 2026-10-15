@@ -1,0 +1,12 @@
+.texpadtmp/
+*.aux
+*.log
+*.toc
+*.lof
+*.lot
+*.loa
+*.bcf
+*.run.xml
+*.bbl
+*.blg
+*.synctex.gz
