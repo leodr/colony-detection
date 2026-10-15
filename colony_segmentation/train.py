@@ -245,7 +245,10 @@ import requests
 
 
 def send_discord_notification(message: str, embed_data: dict):
-    url = "REDACTED_DISCORD_WEBHOOK_URL"
+    # Set DISCORD_WEBHOOK_URL to get notified when a run finishes
+    url = os.environ.get("DISCORD_WEBHOOK_URL")
+    if not url:
+        return
 
     data = {"content": message, "username": "Notification Bot"}
 
