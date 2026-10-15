@@ -110,3 +110,7 @@ Data and models are on the Hugging Face Hub:
 - [leodriesch/agar](https://huggingface.co/datasets/leodriesch/agar): AGAR dataset mirror (public)
 - [leodriesch/photobox-colonies](https://huggingface.co/datasets/leodriesch/photobox-colonies): photobox dataset and inpainting patches (private)
 - [leodriesch/photobox-colony-detectors](https://huggingface.co/leodriesch/photobox-colony-detectors): trained YOLOv8x and Faster R-CNN models (private)
+
+## License
+
+The code is licensed under the [MIT License](LICENSE).
