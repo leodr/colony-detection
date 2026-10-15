@@ -1,94 +1,112 @@
-<h1 align="center">
-  Bacterial Colony Segmentation
-</h1>
+<h1 align="center">Automating Bacterial Colony Segmentation with Deep Learning</h1>
 
-<p align="center"><b>
-  Project to automatically segment colonies on images of petri dishes.
-</b><p>
+<p align="center">
+  Bachelor thesis by Leonhard Driesch · University of Münster, 2024<br>
+  in collaboration with the microbiology lab of FH Münster
+</p>
 
-<br><br>
+<p align="center">
+  <a href="docs/thesis/thesis.pdf">Thesis (PDF)</a> ·
+  <a href="docs/defense/defense_presentation.pdf">Defense slides</a> ·
+  <a href="https://huggingface.co/datasets/leodriesch/agar">AGAR mirror</a>
+</p>
 
-This repository contains all the building blocks of the colony segmentation
-project, including the data annotation app and (eventually) the machine learning
-model.
+<p align="center">
+  <img src="docs/thesis/assets/detection-app.jpg" width="800" alt="Detection app: a photo of a Petri dish and the same photo with detected colonies marked">
+</p>
 
-Most of the code is written in Python, excluding the annotation interface, which
-is web-based.
+Counting bacterial colonies on Petri dishes is routine lab work, and it is slow and tedious. This project builds the pieces for counting them automatically: a dataset of plate photos, an app that makes labeling them fast, and an object detection model trained on that data. The model is deployed as a web app at FH Münster.
 
-<br>
+| | |
+|---|---|
+| **529** plate photos | **200** labeled with instance masks |
+| **92.9%** of detected boxes are colonies | **87.3%** of colonies are found |
+| **6.26** mean absolute counting error | **0.153** sMAPE |
 
-## Screenshots
+<sub>Test set of 50 labeled photos, Faster R-CNN pretrained on COCO and AGAR.</sub>
 
-![Screenshot of annotation app](./screenshot.png)
+## 1. The photobox dataset
 
-<br>
+The lab takes photos in a photo box: a light box with a diffuser keeps lighting constant and reduces glare. A Raspberry Pi High Quality Camera takes the photos at 3040 × 3040 pixels. The plates vary in medium, background and colony shape.
 
-## Setup for Annotation Server
+<p align="center">
+  <img src="docs/thesis/assets/photobox.jpg" height="260" alt="The photo box next to a monitor showing a plate photo">
+  <img src="docs/thesis/assets/chart_image_types.jpg" height="260" alt="Six example photos: dots, circular, mycelial, amorphous, mixed circular and other colonies">
+</p>
 
-1. **Requirements**
+## 2. Labeling with Segment Anything
 
-   You need to have Python 3 installed on the system. Install necessary packages
-   with
+Labels are instance segmentation masks: one colored region per colony. They can be converted into bounding boxes, semantic masks or keypoints, which kept the choice of model open.
 
-   ```bash
-   pip install -r requirements.txt
-   ```
+The [annotation app](annotation_app) makes labeling fast. Clicking a colony masks it with the Segment Anything Model (SAM). Shift-clicking adds an area to the previous colony, and clicking inside an existing mask splits colonies that grew together. Every photo in the dataset was labeled this way, without manual mask editing.
 
-2. **Install PyTorch**
+<p align="center">
+  <img src="docs/thesis/assets/annotation-app-screenshot.jpg" height="300" alt="Labeling app with a plate photo and colored colony masks">
+  <img src="docs/thesis/assets/example_mask.png" height="300" alt="Instance segmentation mask: colored spots on a black background">
+</p>
 
-   Follow the instructions [here](https://pytorch.org/get-started/locally/) to
-   install PyTorch on your system. If you have an NVIDIA GPU available, choose
-   the CUDA version.
+## 3. Training
 
-3. **Download the Segment Anything model file**
+The detector is a [Faster R-CNN](colony_segmentation) (ResNet-50 FPN v2), trained with SGD. Training stops after the learning rate has been reduced twice for lack of improvement.
 
-   Download the ViT-H SAM model file from
-   [here](https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth).
-   If the link is dead, check the
-   [repo](https://github.com/facebookresearch/segment-anything#model-checkpoints)
-   for the download link.
+**Pretraining helps the most.** The model was trained on photobox from random weights, from COCO weights, and with an extra training stage on the [AGAR dataset](https://huggingface.co/datasets/leodriesch/agar) (18,000 plate photos) before photobox:
 
-   Rename the file to `sam_vit_h.pth` and put it into the `annotation-server`
-   folder.
+| Pretraining | Epochs | mAP | MAE | sMAPE |
+|---|---|---|---|---|
+| Random | 156 | 0.692 | 9.70 | 0.249 |
+| COCO | 71 | 0.761 | 6.92 | 0.184 |
+| Random + AGAR | 68 | 0.707 | 8.00 | 0.161 |
+| **COCO + AGAR** | **51** | **0.791** | **4.64** | **0.136** |
 
-   If you have curl, you can use this command to download it and put it into the
-   right spot:
+<p align="center">
+  <img src="docs/thesis/assets/chart_dataset_comparison.png" width="700" alt="Validation sMAPE and mAP over epochs: COCO+AGAR converges fastest and highest, Random slowest and lowest">
+</p>
 
-   ```bash
-   curl -o sam_vit_h.pth https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth
-   ```
+**Augmentations did not help.** Random rotation and an inpainting augmentation both lowered all validation metrics. The inpainting augmentation covers colonies with background generated by Kandinsky 2.2; 934 of 1,757 generated patches passed manual review. The generated areas are still visibly different from real plates, and the model is sensitive to images outside its domain.
 
-4. **Run the application**
+<p align="center">
+  <img src="docs/thesis/assets/circles_visualized.jpg" height="260" alt="Candidate circles for inpainting, green ones usable, red ones not">
+  <img src="docs/thesis/assets/inpaint_circles_applied.jpg" height="260" alt="A plate photo with colonies covered by inpainted background">
+</p>
 
-   Open the terminal inside the `annotation-server` folder and run it with
+## 4. Results
 
-   ```bash
-   python3 main.py
-   ```
+| Photo | Ground truth | Random | COCO + AGAR |
+|---|---|---|---|
+| <img src="docs/thesis/assets/default_mmrsbpb_default_19012024141840.jpg" width="180"> | <img src="docs/thesis/assets/gt_default_mmrsbpb_default_19012024141840.jpg" width="180"> | <img src="docs/thesis/assets/pred_default_mmrsbpb_default_19012024141840.jpg" width="180"> | <img src="docs/thesis/assets/pt_pred_default_mmrsbpb_default_19012024141840.jpg" width="180"> |
+| <img src="docs/thesis/assets/rod_lentilactobacillus_buchneri_20_default_mmrsbpb_3_07102022120738.jpg" width="180"> | <img src="docs/thesis/assets/gt_rod_lentilactobacillus_buchneri_20_default_mmrsbpb_3_07102022120738.jpg" width="180"> | <img src="docs/thesis/assets/pred_rod_lentilactobacillus_buchneri_20_default_mmrsbpb_3_07102022120738.jpg" width="180"> | <img src="docs/thesis/assets/pt_pred_rod_lentilactobacillus_buchneri_20_default_mmrsbpb_3_07102022120738.jpg" width="180"> |
 
-<br>
+Pretraining reduces false positives and finds more small colonies and colonies that touch. Many small colonies on one plate remain hard (second row).
 
-## Setup for Annotation Interface
+<p align="center">
+  <img src="docs/thesis/assets/chart_box_count.png" width="380" alt="Predicted vs ground truth colony count on the test set; most points lie close to the diagonal, one outlier far below it">
+</p>
 
-1. **Requirements**
+On the test set the model counts too many colonies on plates with few colonies and too few on plates with many. The outlier is a plate with 398 colonies, of which 187 were found. Averaged per photo, precision is 78.1% and recall 90.1%: about 8 of 10 predictions are correct, and about 9 of 10 colonies are found.
 
-   You need Node.js installed on your system. Choose the LTS release from
-   [here](https://nodejs.org/en).
+## 5. Outlook
 
-2. **Install Dependencies**
+- **Grow the dataset.** It has only 100 training photos and few plates with more than 200 colonies. Counting with the labeling app produces masks as a byproduct, and corrections made to model predictions could become new training data.
+- **Try other architectures.** Only Faster R-CNN was tested in the thesis. Single-stage detectors such as YOLO performed best on AGAR in the literature.
+- **Classify species**, which Faster R-CNN supports once the labels include a class per colony.
+- **Use smartphone photos.** Nothing depends on the photo box, so students could photograph plates with their phones.
 
-   Install all necessary dependencies by running
+After the thesis, YOLOv8x models were trained on the same data (validation mAP50-95 0.877 on photobox). They are in the model repository together with the Faster R-CNN runs.
 
-   ```bash
-   npm i
-   ```
+## Repository
 
-3. **Run the Development Server**
+| Path | Content |
+|---|---|
+| [`annotation_app/`](annotation_app) | labeling app (SAM server and web interface), with setup instructions |
+| [`colony_segmentation/`](colony_segmentation) | Faster R-CNN training (`train.py`), evaluation and the detection web UI |
+| [`yolo/`](yolo) | YOLOv8 training and web UI |
+| [`inpaint_data_augmentation/`](inpaint_data_augmentation) | inpainting augmentation pipeline |
+| [`dataprep/`](dataprep), [`notebooks/`](notebooks), [`scripts/`](scripts) | data conversion, early computer vision experiments, utilities |
+| [`data/`](data) | photobox metadata; images are downloaded with `scripts/download_data.py` |
+| [`docs/`](docs) | thesis sources, defense slides, status updates, notes |
 
-   You can now run the development server for the app with
+Data and models are on the Hugging Face Hub:
 
-   ```bash
-   npm run dev
-   ```
-
-   and visit it on [http://localhost:5173](http://localhost:5173)
+- [leodriesch/agar](https://huggingface.co/datasets/leodriesch/agar): AGAR dataset mirror (public)
+- [leodriesch/photobox-colonies](https://huggingface.co/datasets/leodriesch/photobox-colonies): photobox dataset and inpainting patches (private)
+- [leodriesch/photobox-colony-detectors](https://huggingface.co/leodriesch/photobox-colony-detectors): trained YOLOv8x and Faster R-CNN models (private)
