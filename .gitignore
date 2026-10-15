@@ -210,3 +210,6 @@ coco_examples/
 
 # Generated datasets
 /datasets/*
+# Images are stored on the Hugging Face Hub, see data/README.md
+data/labeled/*/
+data/unlabeled/
